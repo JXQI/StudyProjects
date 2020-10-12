@@ -8,7 +8,9 @@ import time
 from copy import copy
 from pathlib import Path
 from sys import platform
-
+#解决这个错误：undefined symbol: PyCObject_Type
+import sys
+sys.path.remove('/opt/ros/kinetic/lib/python2.7/dist-packages')
 import cv2
 import matplotlib
 import matplotlib.pyplot as plt
