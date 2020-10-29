@@ -4,13 +4,16 @@ from os.path import join
 import numpy as np
 import torch
 from torchvision import transforms
+from data_deal import deal_Na
+from pandas import DataFrame
 
 class dataloader(Dataset):
     def __init__(self,path,transforms=None,data_set='train'):
         self.path=path
         self.transforms=transforms
         self.data_set=data_set+'.txt'
-        self.class_d={"NC":1,"MCI":2,'AD':3}
+        #self.class_d={"NC":1,"MCI":2,'AD':3}        #TODO:这里需要支持三分类
+        self.class_d = {"NC": 0, "MCI": 1, 'AD': 1}
         self.features=[]
         self.labels=[]
 
@@ -36,10 +39,13 @@ class dataloader(Dataset):
         features=np.around(np.array(features,dtype=np.float32),decimals=3)     #TODO:为啥后边有那么多的0
         label = self.labels[item]
         features=features.transpose((1,2,0))       #TODO:需用补充一下转换的时候各种转置关系，以及和torch的转换关系
+
         if self.transforms:
             features=self.transforms(features)      #TODO:处理数据缺失的问题
             label=torch.tensor(label)
 
+        #在此处暂时加入数据处理部分：    #TODO:后续需要统一，而且写成可调用的函数或者类
+        features=deal_Na(features)
 
         return features,label
 if __name__=='__main__':
