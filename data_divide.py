@@ -7,8 +7,9 @@ from matplotlib import pyplot as plt
 
 #用来划分测试集和验证集
 class data_statistics:
-    def __init__(self):
-        self.path='./data'
+    def __init__(self,path,filename):
+        self.path=path
+        self.filename=filename
         #统计患病人数，正常人数
         self.dict={}
         # 源数据集中各自占比
@@ -17,14 +18,14 @@ class data_statistics:
         self.origin_age = {'NC': [], 'MCI': [], 'AD': []}
         self.origin_sex = {'NC': [], 'MCI': [], 'AD': []}
     #加载数据
-    def data_load(self,filename):
-        with open(join(self.path,filename)) as f:
+    #def data_load(self):
+        with open(join(self.path,self.filename)) as f:
             next(f)
             reader=csv.reader(f)
             for row in reader:
                 self.dict[row[0]]=row[1:]
     #统计各个类别的数目
-    def data_ratio(self):
+    #def data_ratio(self):
         for i,num in enumerate(self.dict['train_diagnose']):
             if float(num)==1:
                 self.origin['NC']+=1
@@ -44,13 +45,13 @@ class data_statistics:
             self.count_sex={}
             for i in self.origin_sex.keys():
                 #计算频次
-                sex=Series(self.origin_sex[i]).value_counts()
+                sex=Series(self.origin_sex[i],dtype='float64').value_counts()
                 self.count_sex[i]=sex
             for i in self.origin_age.keys():
                 #计算频次
                 #age=Series(origin_age[i]).value_counts()
                 #计算平均值
-                age = Series(self.origin_age[i]).mean()
+                age = Series(self.origin_age[i],dtype='float64').mean()
                 self.count_age[i]=round(age,2)
     #返回各个类别的数目
     def get_number_class(self):
@@ -69,4 +70,10 @@ class data_statistics:
         plt.legend()
         plt.show()
 
+if __name__=='__main__':
+    d=data_statistics(path='./data',filename='data_result.csv')
+    print(d.get_number_class())
+    print(d.get_age())
+    print(d.get_sex())
+    d.hist_distributed_age_sex()
 
