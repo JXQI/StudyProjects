@@ -42,9 +42,9 @@ class dataloader(Dataset):
 
 
         return features,label
-
-transform = transforms.Compose([transforms.ToTensor()])
-d=dataloader(path='./data',transforms=transform)
-f,l=d[550]
-print(len(d))
-print(f[0][0],l)
+if __name__=='__main__':
+    transform = transforms.Compose([transforms.ToTensor()])
+    d=dataloader(path='./data',transforms=transform)
+    f,l=d[550]
+    print(len(d))
+    print(f[0][0],l)
