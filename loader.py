@@ -24,7 +24,7 @@ class dataloader(Dataset):
     def __getitem__(self, item):
         filename=join(self.path,self.features[item]+'.csv')
         features=[]
-        print(filename)
+        #print(filename)
         with open(filename) as f:
             next(f)
             reader=csv.reader(f)
@@ -33,7 +33,7 @@ class dataloader(Dataset):
                 for i in row[1:]:
                     temp.append(list(map(float,i.replace('\n','').replace('[','').replace(']','').split())))
                 features.append(temp)
-        features=np.around(features,decimals=3)     #TODO:为啥后边有那么多的0
+        features=np.around(np.array(features,dtype=np.float32),decimals=3)     #TODO:为啥后边有那么多的0
         label = self.labels[item]
         features=features.transpose((1,2,0))       #TODO:需用补充一下转换的时候各种转置关系，以及和torch的转换关系
         if self.transforms:
