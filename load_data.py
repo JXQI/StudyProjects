@@ -30,6 +30,9 @@ for index in range(700):
             #print(np.around(d['train_set'][j][0][i][index],decimals=3))
             d_feature[feature_keys[i]].append(np.around(d['train_set'][j][0][i][index],decimals=3))
     pd.DataFrame.from_dict(data=d_feature,orient='index').to_csv(join(path,str(index)+'.csv'))
+    #需要注意这里添加进文件之后一定得将字典清空，不然会一直append到每个keys，导致最后一个文件累加进去了前边所有的值
+    d_feature.clear()
+    
 #对年龄性别等指标归类，保存单个数据的特征，比如年龄性别等等
 d_result={}
 d_result_keys=['train_diagnose','train_population','train_sites']
