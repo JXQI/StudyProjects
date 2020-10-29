@@ -3,6 +3,7 @@ import pandas as pd
 import os
 from os.path import  join
 from collections import defaultdict
+import numpy as np
 
 
 #加载数据集
@@ -26,7 +27,8 @@ for index in range(700):
         for j in range(20):
             #20个纤维束
             print(index,i,j)
-            d_feature[feature_keys[i]].append(d['train_set'][j][0][i][index])
+            #print(np.around(d['train_set'][j][0][i][index],decimals=3))
+            d_feature[feature_keys[i]].append(np.around(d['train_set'][j][0][i][index],decimals=3))
     pd.DataFrame.from_dict(data=d_feature,orient='index').to_csv(join(path,str(index)+'.csv'))
 #对年龄性别等指标归类，保存单个数据的特征，比如年龄性别等等
 d_result={}
