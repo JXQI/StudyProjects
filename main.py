@@ -19,7 +19,7 @@ if __name__=='__main__':
     print(args)
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print(device)
-    pro = Process(device,model=args.net,batch_size=args.batch_size,lr=args.lr)
+    pro = Process(device,batch_size=args.batch_size,lr=args.lr)
     pro.train(epoch=args.epoch)
     pro.validate()
     #plt.show()  # TODO:可以改造
