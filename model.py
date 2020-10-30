@@ -12,10 +12,10 @@ os.environ['KMP_DUPLICATE_LIB_OK']='True'
 class Linear(nn.Module):
     def __init__(self):
         super(Linear, self).__init__()
-        self.fc1=nn.Linear(8*20*100,4096)
+        self.fc1=nn.Linear(7*20*100,4096)
         self.fc2=nn.Linear(4096,2)
     def forward(self,x):
-        x=x.view(-1,8*20*100)
+        x=x.view(-1,7*20*100)
         #print("--------")
         #print(x)
         #x=self.fc1(x)
