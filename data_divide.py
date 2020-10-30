@@ -87,6 +87,8 @@ class data_statistics:
             data_set['val'][i]=(self.origin[i]['index'][math.ceil(ratio[0] * self.origin[i]['count']):])
         #删除原来的txt文件
         for name in os.listdir('./'):
+            if name == 'requirements.txt':
+                continue
             if name.endswith('.txt'):
                 os.remove(join('./',name))
                 print("Delete the file:"+join('./',name))
