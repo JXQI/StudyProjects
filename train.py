@@ -13,15 +13,15 @@ import operator
 from functools import reduce
 
 class Process:
-    def __init__(self,device,batch_size,lr=0.1):
+    def __init__(self,device,batch_size,lr=0.1,class_type='B'):
         self.device = device
         self.batch_size=batch_size
         self.lr=lr
         self.net=Linear()
         self.net=self.net.to(self.device)
         self.transform = transforms.Compose([transforms.ToTensor()])
-        train_set=dataloader(path='./data',data_set='train',transforms=self.transform)
-        val_set=dataloader(path='./data',data_set='val',transforms=self.transform)
+        train_set=dataloader(path='./data',data_set='train',transforms=self.transform,class_type=class_type)
+        val_set=dataloader(path='./data',data_set='val',transforms=self.transform,class_type=class_type)
         print(len(train_set),len(val_set))
         self.train_loader=DataLoader(dataset=train_set,batch_size=self.batch_size,shuffle=True,num_workers=0)
         self.val_loader = DataLoader(dataset=val_set, batch_size=self.batch_size, shuffle=True, num_workers=0)

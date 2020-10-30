@@ -16,16 +16,17 @@ class Linear(nn.Module):
         self.fc2=nn.Linear(4096,2)
     def forward(self,x):
         x=x.view(-1,8*20*100)
-        print("--------")
-        print(x)
+        #print("--------")
+        #print(x)
+        x=self.fc1(x)
         #x=F.relu(self.fc1(x))
-        x=F.sigmoid(self.fc1(x))
-        print("**********")
-        print(x)
+        #x=F.sigmoid(self.fc1(x))
+        #print("**********")
+        #print(x)
         x=self.fc2(x)
-        print("||||||||||")
-        print(x)
+        #print("||||||||||")
         #x=F.softmax(x,dim=1)
+        print(x)
 
         return x
 if __name__=='__main__':

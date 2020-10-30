@@ -8,26 +8,30 @@ from data_deal import deal_Na
 from pandas import DataFrame
 
 class dataloader(Dataset):
-    def __init__(self,path,transforms=None,data_set='train'):
+    def __init__(self,path,transforms=None,data_set='train',class_type="B"):
         self.path=path
         self.transforms=transforms
         self.data_set=data_set+'.txt'
+        self.class_type=class_type
         #self.class_d={"NC":1,"MCI":2,'AD':3}        #TODO:这里需要支持三分类
-        self.class_d = {"NC": 0, "MCI": 1, 'AD': 1}
+        self.class_d = {"NC": 0, 'AD': 1} if self.class_type=='B' else {"NC": 0, "MCI": 1, 'AD': 2}
         self.features=[]
         self.labels=[]
 
         with open(self.data_set) as f:
             for line in f.readlines():
                 line=line.strip().split()
+                if self.class_type=='B' and line[1]=='MCI':
+                    continue
                 self.features.append(line[0])
                 self.labels.append(self.class_d[line[1]])
+
     def __len__(self):
         return len(self.features)
     def __getitem__(self, item):
         filename=join(self.path,self.features[item]+'.csv')
         features=[]
-        #print(filename)
+        print(filename)
         with open(filename) as f:
             next(f)
             reader=csv.reader(f)
@@ -51,6 +55,6 @@ class dataloader(Dataset):
 if __name__=='__main__':
     transform = transforms.Compose([transforms.ToTensor()])
     d=dataloader(path='./data',transforms=transform)
-    f,l=d[550]
+    f,l=d[0]
     print(len(d))
     print(f[0][0],l)
