@@ -4,6 +4,9 @@ import os
 from os.path import  join
 from collections import defaultdict
 import numpy as np
+#加载源shuju
+from settings import URL,PATH,FILENAME
+from download_from_url import download_dataset_from_url
 
 #创建类用于将特征分开存储，方便后边对特征的提取已经融合方法实现
 class data_load:
@@ -49,10 +52,13 @@ class data_load:
         print("load and save the dimenon_feature files have finished!!!")
 
 if __name__=='__main__':
-    filename = 'MCAD_AFQ_competition.mat'
+    filename = FILENAME
+    download_dataset_from_url(url=URL,filename=FILENAME,path=PATH)
     save_path='./data'
     d=data_load(filename=filename,save_path=save_path)
+    #如果已经存在，就不要反复执行，因为会重新生成文件
     d.single_dimenon_feature()
+    d.AFQ_feature()
 
 
 
