@@ -1,6 +1,9 @@
 # DTI_AD
 数据下载：https://pan.cstcloud.cn/s/xHENmy4SQ14  
 生成requirements.txt文件：pipreqs ./ --encoding=utf8
+
+安装需要用到的库：  
+pip install -r requirements.txt  
    
 执行程序说明:  
 1.首先需要对原始数据MCAD_AFQ_competition.mat进行读取操作，我们这里采取的方式是：对于纤维束的特征单独存储在每个.csv文件中，对于age、sex等特征存储在同一个文件中  
