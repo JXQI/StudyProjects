@@ -9,10 +9,14 @@ from pandas import DataFrame
 import os
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
-class Linear(nn.Module):
-    def __init__(self):
-        super(Linear, self).__init__()
+#两层FCN
+class Linear_2(nn.Module):
+    def __init__(self,isDrop=(False,0.2)):
+        super(Linear_2, self).__init__()
+        self.isDrop=isDrop
         self.fc1=nn.Linear(7*20*100,4096)
+        if self.isDrop[0]:
+            self.drop=nn.Dropout(self.isDrop[1])
         self.fc2=nn.Linear(4096,2)
     def forward(self,x):
         x=x.view(-1,7*20*100)
@@ -23,14 +27,28 @@ class Linear(nn.Module):
         #x=F.sigmoid(self.fc1(x))
         #print("**********")
         #print(x)
+        x=self.drop(x)
         x=self.fc2(x)
         #print("||||||||||")
         #x=F.softmax(x,dim=1)
         #print(x)
-
         return x
+
+#模型调用窗口
+class model:
+    def __init__(self,net='Linear_2',pretrained=True):
+        self.net=net
+        self.pretrained=pretrained
+
+    def Net(self):
+        if self.net=='Linear_2':
+              Model=Linear_2(isDrop=(True,0.2))
+        elif self.net=='Linear_3':
+            pass
+        return Model
+
 if __name__=='__main__':
-    model=Linear()
+    model=model()
     transform = transforms.Compose([transforms.ToTensor()])
     d = dataloader(path='./data', transforms=transform)
     feature,label=d[0]
@@ -45,5 +63,5 @@ if __name__=='__main__':
                 df=df.fillna(value=dictory[dim1][dim2])
             feature[dim1][dim2]=torch.tensor(df.to_numpy().flatten())
     #测试
-    y=model(feature)
-    print(y)
+    y=model.Net()
+    print(y(feature))
