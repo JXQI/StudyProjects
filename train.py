@@ -1,4 +1,4 @@
-from model import Linear
+from model import Model
 from loader import dataloader
 import torch
 from torch.utils.data import DataLoader
@@ -13,11 +13,13 @@ import operator
 from functools import reduce
 
 class Process:
-    def __init__(self,device,batch_size,lr=0.1,class_type='B'):
+    def __init__(self,device,batch_size,lr=0.1,class_type='B',net='Linear_2',\
+                 pretrained=False,Weight_path='',isDrop=(False,0.2)):
         self.device = device
         self.batch_size=batch_size
         self.lr=lr
-        self.net=Linear()
+        model=Model(net=net,Weight_path=Weight_path,pretrained=pretrained,isDrop=isDrop)
+        self.net=model.Net()
         self.net=self.net.to(self.device)
         self.transform = transforms.Compose([transforms.ToTensor()])
         train_set=dataloader(path='./data',data_set='train',transforms=self.transform,class_type=class_type)
