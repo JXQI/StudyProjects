@@ -5,8 +5,7 @@ import pandas as pd
 from os.path import  join
 import time
 from sklearn.metrics import roc_curve,roc_auc_score
-import operator
-from functools import reduce
+import torch.nn.functional as F
 import numpy as np
 
 
@@ -28,8 +27,11 @@ def Accuracy(net,dataloader,loss_function,device):
             net=net.to(device)
             outputs=net(inputs)
             _,predicted=torch.max(outputs,1)
-            label.append(labels)
-            target.append(predicted)
+            #将label和概率添加进列表中去
+            for lp in range(len(labels)):
+                label.append(int(labels[lp]))
+                target.append(float(F.softmax(outputs[i], dim=0)[1]))
+
             print(predicted,labels)
             total+=labels.size(0)
             correct+=(predicted==labels).sum().item()
@@ -37,9 +39,6 @@ def Accuracy(net,dataloader,loss_function,device):
             temp=loss_function(outputs,labels)
             loss.append(temp)
             loss_get+=temp
-        # 转化为一维列表
-        label = reduce(operator.add, label)
-        target = reduce(operator.add, target)
         return loss_get/total,correct/total,loss,label,target
 
 def drawline(x,y,xlabel,ylabel,title):
@@ -92,6 +91,8 @@ class Draw_ROC:
         self.path=path
     #输入类别和预测结果
     def ROC(self,label,predict,name):
+        label=np.array(label)
+        predict=np.abs(predict)
         fpr, tpr, thresholds = roc_curve(label, predict)
         #计算分数
         score=self.roc_score(label,predict)
@@ -104,6 +105,8 @@ class Draw_ROC:
         #plt.show()
         plt.savefig(join(self.path, name+self.label + '_roc.jpg'))
     def roc_score(self,label,predict):
+        label = np.array(label)
+        predict = np.abs(predict)
         self.score=roc_auc_score(label,predict)
         return self.score
 
