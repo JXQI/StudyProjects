@@ -31,7 +31,7 @@ def Accuracy(net,dataloader,loss_function,device):
             for lp in range(len(labels)):
                 label.append(int(labels[lp]))
                 target.append(float(F.softmax(outputs[lp], dim=0)[1]))
-                predict.append(predicted[lp])
+                predict.append(int(predicted[lp]))
 
             print(predicted,labels)
             total+=labels.size(0)
