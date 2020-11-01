@@ -4,7 +4,7 @@ import os
 import pandas as pd
 from os.path import  join
 import time
-from sklearn.metrics import roc_curve,roc_auc_score
+from sklearn.metrics import roc_curve,roc_auc_score,f1_score
 import torch.nn.functional as F
 import numpy as np
 
@@ -109,6 +109,11 @@ class Draw_ROC:
         predict = np.abs(predict)
         self.score=roc_auc_score(label,predict)
         return self.score
+    def f1_score(self,label,predict):
+        label = np.array(label)
+        predict = np.abs(predict)
+        score=f1_score(label,predict,average='micro')
+        return score
 
 if __name__ == '__main__':
     print("当前时间::" + time.strftime("%Y-%m-%d", time.localtime(time.time()))+'-'+time.strftime("%H-%M-%S",time.localtime(time.time())))

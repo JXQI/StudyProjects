@@ -95,8 +95,8 @@ class Process:
         print(len(val_loss_arr),len(train_loss_arr))
         drawline(range(len(val_loss_arr)), val_loss_arr, "i", "loss", "the val_loss of the pre data")  # TODO:增加loss的显示
         drawline(range(len(train_loss_arr)), train_loss_arr, "i", "loss", "the train_best_loss of the pre data")  # TODO:增加loss的显示
-        print("The vol_loss is %f ,The accuarcy is %f,The roc_score is %f"%(val_loss,val_acc,self.roc.roc_score(val_labels,val_targets)))
-        print("The train_loss is %f ,The accuarcy is %f,The roc_score is %f" % (train_loss, train_acc,self.roc.roc_score(train_labels,train_targets)))
+        print("The vol_loss is %f ,The accuarcy is %f,The roc_score is %f,f1_score is %f"%(val_loss,val_acc,self.roc.roc_score(val_labels,val_targets),self.roc.f1_score(val_labels,val_targets)))
+        print("The train_loss is %f ,The accuarcy is %f,The roc_score is %f,f1_score is %f" % (train_loss, train_acc,self.roc.f1_score(train_labels,train_targets)))
 
 if __name__=="__main__":
     # device=torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
