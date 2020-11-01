@@ -19,7 +19,7 @@ def Accuracy(net,dataloader,loss_function,device):
     total=0
     correct=0
     net.eval()
-    label,target=[],[]
+    label,target,predict=[],[],[]
     with torch.no_grad():
         for i,data in enumerate(dataloader,0):
             inputs=data[0].to(device)
@@ -31,6 +31,7 @@ def Accuracy(net,dataloader,loss_function,device):
             for lp in range(len(labels)):
                 label.append(int(labels[lp]))
                 target.append(float(F.softmax(outputs[lp], dim=0)[1]))
+                predict.append(predicted[lp])
 
             print(predicted,labels)
             total+=labels.size(0)
@@ -39,7 +40,7 @@ def Accuracy(net,dataloader,loss_function,device):
             temp=loss_function(outputs,labels)
             loss.append(temp)
             loss_get+=temp
-        return loss_get/total,correct/total,loss,label,target
+        return loss_get/total,correct/total,loss,label,target,predict
 
 def drawline(x,y,xlabel,ylabel,title):
     path='./result'
@@ -58,6 +59,8 @@ def drawline(x,y,xlabel,ylabel,title):
 class SaveCsv:
     def __init__(self,name,path,file_name=None):
         self.name=name
+        if file_name in os.listdir(path):
+            os.remove(join(path,file_name))
         df = pd.DataFrame(data=[name], columns=name)
         if not os.path.isdir(path):
             os.mkdir(path)
@@ -96,14 +99,15 @@ class Draw_ROC:
         fpr, tpr, thresholds = roc_curve(label, predict)
         #计算分数
         score=self.roc_score(label,predict)
+        plt.figure()
         plt.plot([0, 1], [0, 1], 'k--')
-        plt.plot(fpr, tpr, label=name+self.label+'_'+str(score))
+        plt.plot(fpr, tpr, label=name+self.label+'_'+str(round(score,2)))
         plt.xlabel('False positive rate')
         plt.ylabel('True positive rate')
         plt.title('ROC curve')
         plt.legend(loc='best')
         #plt.show()
-        plt.savefig(join(self.path, name+self.label + '_roc.jpg'))
+        plt.savefig(join(self.path, name+'_'+self.label + '_roc.jpg'))
     def roc_score(self,label,predict):
         label = np.array(label)
         predict = np.abs(predict)

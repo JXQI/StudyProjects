@@ -33,7 +33,7 @@ class Process:
         #存储结果最好的模型参数
         self.best_model = ''
         # 存储训练结果为.csv文件
-        self.result_csv = SaveCsv(name=['model', 'batch_size', 'lr',"isDrop","epoch","accu","roc_score"], path='./result',file_name=self.net.name+'.csv')
+        self.result_csv = SaveCsv(name=['model', 'batch_size', 'lr',"isDrop","epoch","accu","roc_score",'F1_score'], path='./result',file_name=self.net.name+'.csv')
         #生成ROC曲线
         self.roc=Draw_ROC(path='./result',label=self.net.name)
     def train(self,epoch):
@@ -59,15 +59,17 @@ class Process:
                     print("[%d, %d] loss:%f"%(j+1,i+1,running_loss/10))
                     #running_loss_arr.append(running_loss/100) #TODO:增加loss曲线的显示
                     running_loss=0
-            loss_temp,acc_temp,loss_per,labels,targets=Accuracy(self.net,self.train_loader,self.loss,self.device)
+            loss_temp,acc_temp,loss_per,labels,targets,predicts=Accuracy(self.net,self.train_loader,self.loss,self.device)
             loss_list.append(loss_temp)
             acc_list.append(acc_temp)
             running_loss_arr.append(loss_per)
             #计算roc_score
             roc_score=self.roc.roc_score(labels, targets)
-            print("%d epoch the loss is %f,the accuarcy is %f " %(j+1,loss_temp,acc_temp))
+            #计算F1—score
+            F1_score = self.roc.f1_score(labels, predicts)
+            print("%d epoch the loss is %f,the accuarcy is %f,the AUC is %f,the F1-score is %f "%(j+1,loss_temp,acc_temp,roc_score,F1_score))
             '''存储训练结果 name=['image_size','batch_size','lr',"epoch","accu"]'''
-            self.result_csv.savefile(my_list=[self.net.name, self.batch_size,self.lr,self.isDrop, j+1, acc_temp,roc_score])
+            self.result_csv.savefile(my_list=[self.net.name, self.batch_size,self.lr,self.isDrop, j+1, acc_temp,roc_score,F1_score])
 
             #保存所有的model,并且挑出最好的
             model_name='Linear'+'_'+str(j)+'_'+str(int(acc_temp*100))+'.pth'
@@ -87,16 +89,16 @@ class Process:
 
     def validate(self):
         self.net.load_state_dict(torch.load(join('./Weights',self.best_model)))
-        val_loss,val_acc,val_loss_arr,val_labels,val_targets=Accuracy(self.net,self.val_loader,self.loss,self.device)
-        train_loss, train_acc, train_loss_arr,train_labels,train_targets= Accuracy(self.net, self.train_loader, self.loss, self.device)
+        val_loss,val_acc,val_loss_arr,val_labels,val_targets,val_predicts=Accuracy(self.net,self.val_loader,self.loss,self.device)
+        train_loss, train_acc, train_loss_arr,train_labels,train_targets,train_predicts= Accuracy(self.net, self.train_loader, self.loss, self.device)
         # 画出ROC曲线并且保存
         self.roc.ROC(label=val_labels, predict=val_targets,name='val')
         self.roc.ROC(label=train_labels, predict=train_targets,name='train')
         print(len(val_loss_arr),len(train_loss_arr))
         drawline(range(len(val_loss_arr)), val_loss_arr, "i", "loss", "the val_loss of the pre data")  # TODO:增加loss的显示
         drawline(range(len(train_loss_arr)), train_loss_arr, "i", "loss", "the train_best_loss of the pre data")  # TODO:增加loss的显示
-        print("The vol_loss is %f ,The accuarcy is %f,The roc_score is %f,f1_score is %f"%(val_loss,val_acc,self.roc.roc_score(val_labels,val_targets),self.roc.f1_score(val_labels,val_targets)))
-        print("The train_loss is %f ,The accuarcy is %f,The roc_score is %f,f1_score is %f" % (train_loss, train_acc,self.roc.f1_score(train_labels,train_targets)))
+        print("The vol_loss is %f ,The accuarcy is %f,The roc_score is %f,f1_score is %f"%(val_loss,val_acc,self.roc.roc_score(val_labels,val_targets),self.roc.f1_score(val_labels,val_predicts)))
+        print("The train_loss is %f ,The accuarcy is %f,The roc_score is %f,f1_score is %f" % (train_loss, train_acc,self.roc.f1_score(train_labels,train_predicts)))
 
 if __name__=="__main__":
     # device=torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
