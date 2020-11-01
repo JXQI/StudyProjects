@@ -7,6 +7,7 @@ import time
 from sklearn.metrics import roc_curve,roc_auc_score
 import operator
 from functools import reduce
+import numpy as np
 
 
 # net:trained model
@@ -27,8 +28,8 @@ def Accuracy(net,dataloader,loss_function,device):
             net=net.to(device)
             outputs=net(inputs)
             _,predicted=torch.max(outputs,1)
-            label.append(labels)
-            target.append(predicted)
+            label.append(np.array(labels))
+            target.append(np.array(predicted))
             #转化为一维列表
             label = reduce(operator.add, label)
             target=reduce(operator.add, target)
