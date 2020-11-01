@@ -5,6 +5,9 @@ import pandas as pd
 from os.path import  join
 import time
 from sklearn.metrics import roc_curve,roc_auc_score
+import operator
+from functools import reduce
+
 
 # net:trained model
 # dataloader:dataloader class
@@ -26,6 +29,9 @@ def Accuracy(net,dataloader,loss_function,device):
             _,predicted=torch.max(outputs,1)
             label.append(labels)
             target.append(predicted)
+            #转化为一维列表
+            label = reduce(operator.add, label)
+            target=reduce(operator.add, target)
             print(predicted,labels)
             total+=labels.size(0)
             correct+=(predicted==labels).sum().item()
@@ -33,6 +39,7 @@ def Accuracy(net,dataloader,loss_function,device):
             temp=loss_function(outputs,labels)
             loss.append(temp)
             loss_get+=temp
+            print(label,target)
         return loss_get/total,correct/total,loss,label,target
 
 def drawline(x,y,xlabel,ylabel,title):
