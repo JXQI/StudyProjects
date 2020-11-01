@@ -4,6 +4,7 @@ import os
 import pandas as pd
 from os.path import  join
 import time
+from sklearn.metrics import roc_curve,roc_auc_score
 
 # net:trained model
 # dataloader:dataloader class
@@ -15,6 +16,7 @@ def Accuracy(net,dataloader,loss_function,device):
     total=0
     correct=0
     net.eval()
+    label,target=[],[]
     with torch.no_grad():
         for i,data in enumerate(dataloader,0):
             inputs=data[0].to(device)
@@ -22,6 +24,8 @@ def Accuracy(net,dataloader,loss_function,device):
             net=net.to(device)
             outputs=net(inputs)
             _,predicted=torch.max(outputs,1)
+            label.append(labels)
+            target.append(predicted)
             print(predicted,labels)
             total+=labels.size(0)
             correct+=(predicted==labels).sum().item()
@@ -29,7 +33,7 @@ def Accuracy(net,dataloader,loss_function,device):
             temp=loss_function(outputs,labels)
             loss.append(temp)
             loss_get+=temp
-        return loss_get/total,correct/total,loss
+        return loss_get/total,correct/total,loss,label,target
 
 def drawline(x,y,xlabel,ylabel,title):
     path='./result'
@@ -58,13 +62,12 @@ class SaveCsv:
         df.to_csv((self.path), encoding="utf-8-sig", mode="a", header=False, index=False)
 
 
-    def savefile(self, my_list,name):
+    def savefile(self, my_list):
         """
         把文件存成csv格式的文件，header 写出列名，index写入行名称
         :param my_list: 要存储的一条列表数据
         :return:
         """
-        name=self.name
         df = pd.DataFrame(data=[my_list],columns=self.name)
         df.to_csv(self.path, encoding="utf-8-sig", mode="a", header=False, index=False)
 
@@ -76,16 +79,26 @@ class SaveCsv:
         pf = pd.DataFrame(data=self.clist)
         pf.to_csv(self.path, encoding="utf-8-sig", header=False, index=False)
 
-
-    def main(self):
-        nameList = ["beijing", "shanghai", "guangzhou", "shenzhen", "xiongan", "zhengzhou"]
-        # start表示循环从1开始计数
-        for num, data in enumerate(nameList, start=1):
-            if num % 2 == 0:
-                self.savefile(my_list=["成功", data, num],name=['a','b','c'])
-            else:
-                self.savefile(my_list=["失败", data, num],name=['e','g','f'])
-        return 0
+class Draw_ROC:
+    def __init__(self,path,label):
+        self.label=label
+        self.path=path
+    #输入类别和预测结果
+    def ROC(self,label,predict,name):
+        fpr, tpr, thresholds = roc_curve(label, predict)
+        #计算分数
+        score=self.roc_score(label,predict)
+        plt.plot([0, 1], [0, 1], 'k--')
+        plt.plot(fpr, tpr, label=name+self.label+'_'+str(score))
+        plt.xlabel('False positive rate')
+        plt.ylabel('True positive rate')
+        plt.title('ROC curve')
+        plt.legend(loc='best')
+        #plt.show()
+        plt.savefig(join(self.path, name+self.label + '_roc.jpg'))
+    def roc_score(self,label,predict):
+        self.score=roc_auc_score(label,predict)
+        return self.score
 
 if __name__ == '__main__':
     print("当前时间::" + time.strftime("%Y-%m-%d", time.localtime(time.time()))+'-'+time.strftime("%H-%M-%S",time.localtime(time.time())))
