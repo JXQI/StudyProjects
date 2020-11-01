@@ -11,10 +11,11 @@ os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
 #两层FCN
 class Linear_2(nn.Module):
-    def __init__(self,isDrop=(False,0.2)):
+    def __init__(self,isDrop=True,p=0.2):
         super(Linear_2, self).__init__()
-        self.isDrop=isDrop
-        if self.isDrop[0]:
+        self.isDrop=[isDrop,p]
+
+        if self.isDrop:
             self.features=nn.Sequential(
                 nn.Linear(7*20*100,4096),
                 nn.ReLU(inplace=True),
@@ -23,11 +24,12 @@ class Linear_2(nn.Module):
             )
         else:
             self.features = nn.Sequential(
-                nn.Linear(7 * 20 * 100, 4096),
+                nn.Linear(in_features=7 * 20 * 100, out_features=4096),
                 nn.ReLU(inplace=True),
-                nn.Linear(4096, 2),
+                nn.Linear(in_features=4096, out_features=2),
             )
     def forward(self,x):
+        x=x.view(-1,7*20*100)
         x=self.features(x)
 
         return x

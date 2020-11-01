@@ -11,7 +11,7 @@ if __name__=='__main__':
     parse.add_argument('--net', type=str,default='ResNet50',help='select the model to train and test')
     parse.add_argument('--pretrained', type=bool, default=False, help='if model pretrained')
     parse.add_argument('--Weight_path', type=str, default="./Weights/*", help='add the pre_Weight')
-    parse.add_argument('--isDrop', type=list, default=[False,0.2], help='if add the dropout layer and the probility')
+    parse.add_argument('--isDrop', type=bool,default=True, help='if add the dropout layer and the probility')
     parse.add_argument('--train', type=str,default='train', help='train the model')
     parse.add_argument('--epoch', type=int, default=1, help='the epoch')
     parse.add_argument('--batch_size', type=int, default=1, help='the epoch')
