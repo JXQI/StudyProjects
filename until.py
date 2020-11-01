@@ -1,6 +1,10 @@
 import torch
 import matplotlib.pyplot as plt
 import os
+import pandas as pd
+from os.path import  join
+import time
+
 # net:trained model
 # dataloader:dataloader class
 #loss_function: loss choose
@@ -38,3 +42,60 @@ def drawline(x,y,xlabel,ylabel,title):
     plt.plot(x,y)
     plt.savefig('./result/'+title+'.jpg')
     #plt.show()  # TODO :为了同时显示多个图，将这个移除到最后，这里其实可以改为一个类的
+
+
+#存储结果为csv文件
+class SaveCsv:
+    def __init__(self,name,path,file_name=None):
+        self.name=name
+        df = pd.DataFrame(data=[name], columns=name)
+        if not os.path.isdir(path):
+            os.mkdir(path)
+        if file_name:
+            self.path=join(path,file_name)
+        else:
+            self.path=join(path,time.strftime("%Y-%m-%d", time.localtime(time.time()))+'-'+time.strftime("%H-%M-%S",time.localtime(time.time()))+"-result.csv")
+        df.to_csv((self.path), encoding="utf-8-sig", mode="a", header=False, index=False)
+
+
+    def savefile(self, my_list,name):
+        """
+        把文件存成csv格式的文件，header 写出列名，index写入行名称
+        :param my_list: 要存储的一条列表数据
+        :return:
+        """
+        name=self.name
+        df = pd.DataFrame(data=[my_list],columns=self.name)
+        df.to_csv(self.path, encoding="utf-8-sig", mode="a", header=False, index=False)
+
+    def saveAll(self):
+        """
+        一次性存储完
+        :return:
+        """
+        pf = pd.DataFrame(data=self.clist)
+        pf.to_csv(self.path, encoding="utf-8-sig", header=False, index=False)
+
+
+    def main(self):
+        nameList = ["beijing", "shanghai", "guangzhou", "shenzhen", "xiongan", "zhengzhou"]
+        # start表示循环从1开始计数
+        for num, data in enumerate(nameList, start=1):
+            if num % 2 == 0:
+                self.savefile(my_list=["成功", data, num],name=['a','b','c'])
+            else:
+                self.savefile(my_list=["失败", data, num],name=['e','g','f'])
+        return 0
+
+if __name__ == '__main__':
+    print("当前时间::" + time.strftime("%Y-%m-%d", time.localtime(time.time()))+'-'+time.strftime("%H-%M-%S",time.localtime(time.time())))
+    name = ['Net', 'batch_size', 'lr', "is_drop","epoch", "accu"]
+    sc = SaveCsv(name=name,path='./',file_name="hahahh.csv")
+    #sc.main()
+    #sc.saveAll()
+    for i in range(5):
+        list_name=[i,2,3,4,5,i]
+        sc.savefile(my_list=list_name,name=name)
+    # name=['id','uid','time']
+    # df = pd.DataFrame(data=list, columns=name)
+    # df.to_csv("./Result/result.csv", encoding="utf-8-sig", mode="a", header=True, index=False)

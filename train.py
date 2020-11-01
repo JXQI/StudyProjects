@@ -5,7 +5,7 @@ from torch.utils.data import DataLoader
 import torch.nn as nn
 import torch.optim as optim
 import torchvision.transforms as transforms
-from until import Accuracy,drawline
+from until import Accuracy,drawline,SaveCsv
 from os.path import join
 import os
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
@@ -18,8 +18,9 @@ class Process:
         self.device = device
         self.batch_size=batch_size
         self.lr=lr
-        model=Model(net=net,Weight_path=Weight_path,pretrained=pretrained,isDrop=isDrop)
-        self.net=model.Net()
+        self.isDrop=isDrop
+        self.model=Model(net=net,Weight_path=Weight_path,pretrained=pretrained,isDrop=self.isDrop)
+        self.net=self.model.Net()
         self.net=self.net.to(self.device)
         self.transform = transforms.Compose([transforms.ToTensor()])
         train_set=dataloader(path='./data',data_set='train',transforms=self.transform,class_type=class_type)
@@ -31,6 +32,8 @@ class Process:
         self.optim=optim.SGD(self.net.parameters(),lr=self.lr,momentum=0.9,weight_decay=0.001)
         #存储结果最好的模型参数
         self.best_model = ''
+        # 存储训练结果为.csv文件
+        self.result_csv = SaveCsv(name=['model', 'batch_size', 'lr',"isDrop","epoch","accu"], path='./result',file_name=self.net.name+'.csv')
     def train(self,epoch):
         loss_list=[]
         acc_list=[]
@@ -59,6 +62,10 @@ class Process:
             acc_list.append(acc_temp)
             running_loss_arr.append(loss_per)
             print("%d epoch the loss is %f,the accuarcy is %f " %(j+1,loss_temp,acc_temp))
+            '''存储训练结果 name=['image_size','batch_size','lr',"epoch","accu"]'''
+            self.result_csv.savefile(my_list=[self.net.name, self.batch_size, \
+                                              self.lr,self.isDrop, epoch, acc_temp],
+                                     name=['image_size', 'batch_size', 'lr', "epoch", "accu"])
             #保存所有的model,并且挑出最好的
             model_name='Linear'+'_'+str(j)+'_'+str(int(acc_temp*100))+'.pth'
             path='./Weights'

@@ -14,7 +14,7 @@ class Linear_2(nn.Module):
     def __init__(self,isDrop=True,p=0.2):
         super(Linear_2, self).__init__()
         self.isDrop=[isDrop,p]
-
+        self.name='Linear_2'
         if self.isDrop:
             self.features=nn.Sequential(
                 nn.Linear(7*20*100,4096),
@@ -36,7 +36,7 @@ class Linear_2(nn.Module):
 
 #模型调用窗口
 class Model:
-    def __init__(self,Weight_path=' ',net='Linear_2',pretrained=True,isDrop=(False,0.2)):
+    def __init__(self,Weight_path=' ',net='Linear_2',pretrained=False,isDrop=(False,0.2)):
         self.net=net
         self.pretrained=pretrained
         self.Weight_path=Weight_path
@@ -68,4 +68,5 @@ if __name__=='__main__':
             feature[dim1][dim2]=torch.tensor(df.to_numpy().flatten())
     #测试
     y=model.Net()
+    print(y.name)
     print(y.features)
