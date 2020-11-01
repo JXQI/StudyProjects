@@ -28,11 +28,8 @@ def Accuracy(net,dataloader,loss_function,device):
             net=net.to(device)
             outputs=net(inputs)
             _,predicted=torch.max(outputs,1)
-            label.append(np.array(labels.cpu()))
-            target.append(np.array(predicted.cpu()))
-            #转化为一维列表
-            label = reduce(operator.add, label)
-            target=reduce(operator.add, target)
+            label.append(labels)
+            target.append(predicted)
             print(predicted,labels)
             total+=labels.size(0)
             correct+=(predicted==labels).sum().item()
@@ -40,7 +37,9 @@ def Accuracy(net,dataloader,loss_function,device):
             temp=loss_function(outputs,labels)
             loss.append(temp)
             loss_get+=temp
-            print(label,target)
+        # 转化为一维列表
+        label = reduce(operator.add, label)
+        target = reduce(operator.add, target)
         return loss_get/total,correct/total,loss,label,target
 
 def drawline(x,y,xlabel,ylabel,title):
