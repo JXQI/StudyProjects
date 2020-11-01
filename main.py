@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 if __name__=='__main__':
     #Function(sys.argv)
     parse=argparse.ArgumentParser(description="train or test")
-    parse.add_argument('--net', type=str,default='ResNet50',help='select the model to train and test')
+    parse.add_argument('--net', type=str,default='Linear_3',help='select the model to train and test')
     parse.add_argument('--pretrained', type=bool, default=False, help='if model pretrained')
     parse.add_argument('--Weight_path', type=str, default="./Weights/*", help='add the pre_Weight')
     parse.add_argument('--isDrop', type=bool,default=True, help='if add the dropout layer and the probility')
@@ -23,7 +23,7 @@ if __name__=='__main__':
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print(device)
     pro = Process(device,batch_size=args.batch_size,lr=args.lr,class_type=args.class_type,\
-                  pretrained=args.pretrained,Weight_path=args.Weight_path,isDrop=args.isDrop)
+                  net=args.net,pretrained=args.pretrained,Weight_path=args.Weight_path,isDrop=args.isDrop)
     pro.train(epoch=args.epoch)
     pro.validate()
     #plt.show()  # TODO:可以改造
