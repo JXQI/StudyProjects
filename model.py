@@ -33,6 +33,35 @@ class Linear_2(nn.Module):
         x=self.features(x)
 
         return x
+#三层FCN
+class Linear_3(nn.Module):
+    def __init__(self,isDrop=True,p=0.2):
+        super(Linear_3, self).__init__()
+        self.isDrop=[isDrop,p]
+        self.name='Linear_3'
+        if self.isDrop:
+            self.features=nn.Sequential(
+                nn.Linear(7*20*100,8192),
+                nn.ReLU(inplace=True),
+                nn.Dropout(self.isDrop[1]),
+                nn.Linear(8192, 4096),
+                nn.ReLU(inplace=True),
+                nn.Dropout(0.5),
+                nn.Linear(4096, 2),
+            )
+        else:
+            self.features = nn.Sequential(
+                nn.Linear(7 * 20 * 100, 8192),
+                nn.ReLU(inplace=True),
+                nn.Linear(8192, 4096),
+                nn.ReLU(inplace=True),
+                nn.Linear(4096, 2),
+            )
+    def forward(self,x):
+        x=x.view(-1,7*20*100)
+        x=self.features(x)
+
+        return x
 
 #模型调用窗口
 class Model:
@@ -44,9 +73,9 @@ class Model:
 
     def Net(self):
         if self.net=='Linear_2':
-              Model=Linear_2(isDrop=self.isDrop)
+            Model=Linear_2(isDrop=self.isDrop)
         elif self.net=='Linear_3':
-            pass
+            Model = Linear_3(isDrop=self.isDrop)
         if self.pretrained:
             Model.load_state_dict(torch.load(self.Weight_path))
         return Model
