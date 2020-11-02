@@ -93,7 +93,7 @@ class Process:
             if acc_temp>max_acc:
                 max_acc=acc_temp
                 self.best_model='best_'+model_name
-        torch.save(self.net.state_dict(), join(path, self.best_model))
+                torch.save(self.net.state_dict(), join(path, self.best_model))
         drawline(range(epoch),loss_list,"epoch","loss","the loss of train")
         drawline(range(epoch),acc_list, "epoch","accuarcy", "the accuracy of train")
         running_loss_arr = reduce(operator.add, running_loss_arr)
