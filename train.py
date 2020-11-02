@@ -109,6 +109,7 @@ class Process:
 
     def validate(self):
         self.net.load_state_dict(torch.load(join('./Weights',self.best_model)))
+        self.net.eval()
         val_loss,val_acc,val_loss_arr,val_labels,val_targets,val_predicts=Accuracy(self.net,self.val_loader,self.loss,self.device)
         train_loss, train_acc, train_loss_arr,train_labels,train_targets,train_predicts= Accuracy(self.net, self.train_loader, self.loss, self.device)
         # 画出ROC曲线并且保存
