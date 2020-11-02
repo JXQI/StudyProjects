@@ -33,15 +33,18 @@ class Process:
         #存储结果最好的模型参数
         self.best_model = ''
         # 存储训练结果为.csv文件
-        self.result_csv = SaveCsv(name=['model', 'batch_size', 'lr',"isDrop","epoch","accu","roc_score",'F1_score'], path='./result',file_name=self.net.name+'.csv')
+        self.result_csv = SaveCsv(name=['model', 'batch_size', 'lr',"isDrop","epoch","accu","roc_score",'F1_score',"val_accu","val_roc_score",'val_F1_score'], path='./result',file_name=self.net.name+'.csv')
         #生成ROC曲线
         self.roc=Draw_ROC(path='./result',label=self.net.name)
     def train(self,epoch):
         loss_list=[]
         acc_list=[]
+        loss_list_val = []
+        acc_list_val=[]
         max_acc=0
         self.best_model=''
         running_loss_arr = []
+        running_loss_arr_val = []
         for j in range(epoch):
             running_loss=0
             self.net.train()
@@ -60,16 +63,26 @@ class Process:
                     #running_loss_arr.append(running_loss/100) #TODO:增加loss曲线的显示
                     running_loss=0
             loss_temp,acc_temp,loss_per,labels,targets,predicts=Accuracy(self.net,self.train_loader,self.loss,self.device)
+            val_loss, val_acc, val_loss_arr, val_labels, val_targets, val_predicts = Accuracy(self.net, self.val_loader,self.loss, self.device)
             loss_list.append(loss_temp)
             acc_list.append(acc_temp)
             running_loss_arr.append(loss_per)
+            #添加验证集数据
+            loss_list_val.append(val_loss)
+            acc_list_val.append(val_acc)
+            running_loss_arr_val.append(val_loss_arr)
+
             #计算roc_score
             roc_score=self.roc.roc_score(labels, targets)
+            val_roc_score=self.roc.roc_score(val_labels, val_targets)
             #计算F1—score
             F1_score = self.roc.f1_score(labels, predicts)
-            print("%d epoch the loss is %f,the accuarcy is %f,the AUC is %f,the F1-score is %f "%(j+1,loss_temp,acc_temp,roc_score,F1_score))
+            val_F1_score=self.roc.f1_score(val_labels, val_predicts)
+            print("%d epoch the loss is %f,the train_accuarcy is %f,the val_AUC is %f,the val_F1-score is %f "%(j+1,loss_temp,acc_temp,roc_score,F1_score))
+            print("%d epoch the loss is %f,the val_accuarcy is %f,the val_AUC is %f,the val_F1-score is %f " % (j + 1, val_loss, val_acc,val_roc_score,val_F1_score))
+
             '''存储训练结果 name=['image_size','batch_size','lr',"epoch","accu"]'''
-            self.result_csv.savefile(my_list=[self.net.name, self.batch_size,self.lr,self.isDrop, j+1, acc_temp,roc_score,F1_score])
+            self.result_csv.savefile(my_list=[self.net.name, self.batch_size,self.lr,self.isDrop, j+1, acc_temp,roc_score,F1_score,val_acc,val_roc_score,val_F1_score])
 
             #保存所有的model,并且挑出最好的
             model_name='Linear'+'_'+str(j)+'_'+str(int(acc_temp*100))+'.pth'
@@ -85,6 +98,13 @@ class Process:
         drawline(range(epoch),acc_list, "epoch","accuarcy", "the accuracy of train")
         running_loss_arr = reduce(operator.add, running_loss_arr)
         drawline(range(len(running_loss_arr)), running_loss_arr, "i", "loss", "the train_loss of the pre data") #TODO:增加loss的显示
+
+        #增加val的loss显示
+        drawline(range(epoch), loss_list_val, "epoch", "loss", "the loss of val")
+        drawline(range(epoch), acc_list_val, "epoch", "accuarcy", "the accuracy of val")
+        running_loss_arr_val = reduce(operator.add, running_loss_arr_val)
+        drawline(range(len(running_loss_arr_val)), running_loss_arr_val, "i", "loss",
+                 "the val_loss of the pre data")  # TODO:增加loss的显示
         #plt.show()  #TODO:可以改造
 
     def validate(self):
