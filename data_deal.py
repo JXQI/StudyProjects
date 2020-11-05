@@ -9,9 +9,14 @@ def normalize(data):
     #data.shape (7,20,100)
     for dim1 in range(len(data)):#7
         for dim2 in range(len(data[dim1])):#20
+            #dim1,dim2=7,0
             df = Series(data[dim1][dim2])
+            #print(df.max(),df.min())
             df_norm=(df-df.mean())/(df.std())
             data[dim1][dim2]=df_norm.values
+            #print(df_norm.max(),df_norm.min())
+            break
+        break
     return data
 #TODO:这个求法只是为了让程序暂且通过，后续需要更改：1.计算方式，2.函数实现方式
 def get_dictory():
@@ -59,7 +64,8 @@ def deal_all(self_features,self_path,self_transforms):
                     temp.append(list(map(float, i.replace('\n', '').replace('[', '').replace(']', '').split())))
                 features.append(temp)
         # TODO:这里暂时丢掉最后一维特征，为了保证数据数量级一样，避免特征消失features[:7]
-        features = np.around(np.array(features[:7], dtype=np.float32), decimals=3)  # TODO:为啥后边有那么多的0
+        #features = np.around(np.array(features[:7], dtype=np.float32), decimals=3)  # TODO:为啥后边有那么多的0
+        features = np.around(np.array(features, dtype=np.float32), decimals=3)
         features=normalize(features)
         features = features.transpose((1, 2, 0))  # TODO:需用补充一下转换的时候各种转置关系，以及和torch的转换关系
 

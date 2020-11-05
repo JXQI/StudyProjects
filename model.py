@@ -17,19 +17,19 @@ class Linear_2(nn.Module):
         self.name='Linear_2'
         if self.isDrop:
             self.features=nn.Sequential(
-                nn.Linear(7*20*100,4096),
+                nn.Linear(8*20*100,4096),
                 nn.ReLU(inplace=True),
                 nn.Dropout(self.isDrop[1]),
                 nn.Linear(4096, 2),
             )
         else:
             self.features = nn.Sequential(
-                nn.Linear(in_features=7 * 20 * 100, out_features=4096),
+                nn.Linear(in_features=8 * 20 * 100, out_features=4096),
                 nn.ReLU(inplace=True),
                 nn.Linear(in_features=4096, out_features=2),
             )
     def forward(self,x):
-        x=x.view(-1,7*20*100)
+        x=x.view(-1,8*20*100)
         x=self.features(x)
 
         return x
@@ -41,7 +41,7 @@ class Linear_3(nn.Module):
         self.name='Linear_3'
         if self.isDrop:
             self.features=nn.Sequential(
-                nn.Linear(7*20*100,8192),
+                nn.Linear(8*20*100,8192),
                 nn.ReLU(inplace=True),
                 nn.Dropout(self.isDrop[1]),
                 nn.Linear(8192, 4096),
@@ -51,14 +51,14 @@ class Linear_3(nn.Module):
             )
         else:
             self.features = nn.Sequential(
-                nn.Linear(7 * 20 * 100, 8192),
+                nn.Linear(8 * 20 * 100, 8192),
                 nn.ReLU(inplace=True),
                 nn.Linear(8192, 4096),
                 nn.ReLU(inplace=True),
                 nn.Linear(4096, 2),
             )
     def forward(self,x):
-        x=x.view(-1,7*20*100)
+        x=x.view(-1,8*20*100)
         x=self.features(x)
 
         return x
