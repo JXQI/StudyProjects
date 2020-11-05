@@ -21,7 +21,7 @@ def normalize(data):
 #TODO:这个求法只是为了让程序暂且通过，后续需要更改：1.计算方式，2.函数实现方式
 def get_dictory():
     features=[]
-    with open('./data/1.csv') as f:
+    with open('./data/0.csv') as f:
         next(f)
         reader = csv.reader(f)
         for row in reader:
