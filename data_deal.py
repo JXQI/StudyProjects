@@ -36,8 +36,8 @@ def deal_Na(features):
 
 def deal_all(self_features,self_path,self_transforms):
     data=[]
-    print(len(self_features))
     for item in range(len(self_features)):
+        print(item,len(self_features))
         filename = join(self_path, self_features[item] + '.csv')
         features = []  # 暂时保存每一个病人的特征（20，100，7）
         with open(filename) as f:
@@ -58,7 +58,7 @@ def deal_all(self_features,self_path,self_transforms):
         features = deal_Na(features)
         data.append(features)
 
-        return data
+    return data
 
 if __name__=='__main__':
     pass
