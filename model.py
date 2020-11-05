@@ -9,6 +9,47 @@ from pandas import DataFrame
 import os
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
+class ConvNet(nn.Module):
+    def __init__(self):
+        super(ConvNet, self).__init__()
+        self.name='ConvNet'
+        self.features1 = nn.Sequential(
+            nn.Conv2d(100, 1, 1, stride=1),  #8*20
+            nn.BatchNorm2d(1),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(1, 1, kernel_size=(1, 20), stride=(1, 1))
+        )
+        self.features2 = nn.Sequential(
+            nn.Conv2d(100, 100,kernel_size=(1,20), stride=(1,1)),  # 8*20
+            nn.BatchNorm2d(100),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(100, 1, kernel_size=(1, 1), stride=(1, 1)),
+        )
+        self.features3=nn.Sequential(
+            nn.Conv2d(100,100,kernel_size=(1,8),stride=(1,1)),
+            nn.BatchNorm2d(100),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(100, 1, kernel_size=(1, 1), stride=(1, 1)),
+        )
+        self.features4 = nn.Sequential(
+            nn.Conv2d(100, 1, 1, stride=1),  # 8*20
+            nn.BatchNorm2d(1),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(1, 1, kernel_size=(1, 8), stride=(1, 1))
+        )
+        self.classfiar=nn.Sequential(
+            nn.Linear(in_features=8*2+20*2, out_features=2)
+        )
+    def forward(self,x):
+        x1=self.features1(x.permute((0,3,1,2))) #100*8*20
+        x2=(self.features2(x.permute((0,3,1,2)))) #100*8*20
+        x3=(self.features3(x.permute((0,3,2,1))))  #100*20*8
+        x4=(self.features3(x.permute((0,3,2,1))))
+        x=torch.cat((x1,x2,x3,x4),2)
+        x = x.view(-1, 56)
+        x=self.classfiar(x)
+        return x
+
 #两层FCN
 class Linear_2(nn.Module):
     def __init__(self,isDrop=True,p=0.2):
@@ -76,26 +117,18 @@ class Model:
             Model=Linear_2(isDrop=self.isDrop)
         elif self.net=='Linear_3':
             Model = Linear_3(isDrop=self.isDrop)
+        elif self.net=='ConvNet':
+            Model = ConvNet()
         if self.pretrained:
             Model.load_state_dict(torch.load(self.Weight_path))
         return Model
 
 if __name__=='__main__':
-    model=Model(Weight_path='./Weights/best_Linear_0_55.pth')
+    model=Model(Weight_path='./Weights/best_Linear_0_55.pth',net='ConvNet')
     transform = transforms.Compose([transforms.ToTensor()])
-    d = dataloader(path='./data', transforms=transform)
-    feature,label=d[0]
-    #处理缺失的值有两种情况：1.单个值缺失(平均值代替) 2.整组缺失(特定的组替代)
-    dictory=np.array([[0]*20,[1]*20,[2]*20,[3]*20,[4]*20,[5]*20,[6]*20,[7]*20])     #TODO:求出一个均值来代替
-    for dim1 in range(len(feature)):
-        for dim2 in range(len(feature[0])):
-            df=DataFrame(feature[dim1][dim2])
-            if float(df.mean())==float(df.mean()):        #缺失值==缺失值--->False
-                df=df.fillna(value=df.mean())  #如果均值不为0，就用平均值填充
-            else:
-                df=df.fillna(value=dictory[dim1][dim2])
-            feature[dim1][dim2]=torch.tensor(df.to_numpy().flatten())
+    #d = dataloader(path='./data', transforms=transform)
+    #feature,label=d[0]
     #测试
     y=model.Net()
     print(y.name)
-    print(y.features)
+    print(y.features1)

@@ -26,7 +26,7 @@ class dataloader(Dataset):
                 self.labels.append(self.class_d[line[1]])
                 self.features.append(line[0])
         #这里初始化就将处理好的数据加载进内存中来
-        self.data=deal_all(self.features,self.path,self.transforms)
+        self.data=deal_all(self.features[:1],self.path,self.transforms)
     def __len__(self):
         return len(self.data)
     def __getitem__(self, item):
