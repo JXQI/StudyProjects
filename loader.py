@@ -37,6 +37,7 @@ class dataloader(Dataset):
 if __name__=='__main__':
     transform = transforms.Compose([transforms.ToTensor()])
     d=dataloader(path='./data',transforms=transform)
-    f,l=d[0]
-    print(f.shape)
-    print(f[6][0],l)
+    print(len(d))
+    #f,l=d[0]
+    # print(f.shape)
+    # print(f[6][0],l)

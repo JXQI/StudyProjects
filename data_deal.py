@@ -1,9 +1,18 @@
 import csv
-from pandas import DataFrame
+from pandas import DataFrame,Series
 import numpy as np
 import torch
 from os.path import join
 
+
+def normalize(data):
+    #data.shape (7,20,100)
+    for dim1 in range(len(data)):#7
+        for dim2 in range(len(data[dim1])):#20
+            df = Series(data[dim1][dim2])
+            df_norm=(df-df.mean())/(df.std())
+            data[dim1][dim2]=df_norm.values
+    return data
 #TODO:这个求法只是为了让程序暂且通过，后续需要更改：1.计算方式，2.函数实现方式
 def get_dictory():
     features=[]
@@ -19,7 +28,8 @@ def get_dictory():
     for dim1 in range(len(features)):
         for dim2 in range(len(features[0])):
             df = DataFrame(features[dim1][dim2])
-            dictory[dim1][dim2]=np.around(float(df.mean()),decimals=3)
+            df_norm=(df-df.mean())/(df.std())
+            dictory[dim1][dim2]=np.around(float(df_norm.mean()),decimals=3)
     return dictory
 
 def deal_Na(features):
@@ -50,7 +60,9 @@ def deal_all(self_features,self_path,self_transforms):
                 features.append(temp)
         # TODO:这里暂时丢掉最后一维特征，为了保证数据数量级一样，避免特征消失features[:7]
         features = np.around(np.array(features[:7], dtype=np.float32), decimals=3)  # TODO:为啥后边有那么多的0
+        features=normalize(features)
         features = features.transpose((1, 2, 0))  # TODO:需用补充一下转换的时候各种转置关系，以及和torch的转换关系
+
         # 转化成tensor类型
         if self_transforms:
             features = self_transforms(features)  # TODO:处理数据缺失的问题
@@ -61,4 +73,4 @@ def deal_all(self_features,self_path,self_transforms):
     return data
 
 if __name__=='__main__':
-    pass
+    get_dictory()
