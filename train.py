@@ -89,7 +89,7 @@ class Process:
             path='./Weights'
             if not os.path.isdir(path):
                 os.mkdir(path)
-            torch.save(self.net.state_dict(),join(path,model_name))
+            #torch.save(self.net.state_dict(),join(path,model_name))
             if acc_temp>max_acc:
                 max_acc=acc_temp
                 self.best_model='best_'+model_name
