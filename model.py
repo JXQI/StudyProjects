@@ -41,13 +41,21 @@ class ConvNet(nn.Module):
             nn.Linear(in_features=8*2+20*2, out_features=2)
         )
     def forward(self,x):
+        # print("0000000000")
+        # print(x)
         x1=self.features1(x.permute((0,3,1,2))) #100*8*20
+        # print("111111111")
+        # print(x1)
         x2=(self.features2(x.permute((0,3,1,2)))) #100*8*20
         x3=(self.features3(x.permute((0,3,2,1))))  #100*20*8
         x4=(self.features3(x.permute((0,3,2,1))))
         x=torch.cat((x1,x2,x3,x4),2)
         x = x.view(-1, 56)
+        # print(">>>>>>>>>>")
+        # print(x)
         x=self.classfiar(x)
+        # print("-----")
+        # print(x)
         return x
 
 #两层FCN
