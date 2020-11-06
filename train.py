@@ -53,7 +53,7 @@ class Process:
                 inputs,labels=data[0].to(self.device),data[1].to(self.device)
                 #print(inputs,labels)
                 output=self.net(inputs)
-                print(output,labels)
+                #print(output,labels)
                 loss=self.loss(output,labels)
                 loss.backward() #计算梯度，反向传播
                 self.optim.step()
