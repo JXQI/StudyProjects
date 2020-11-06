@@ -14,31 +14,29 @@ class ConvNet(nn.Module):
         super(ConvNet, self).__init__()
         self.name='ConvNet'
         self.features1 = nn.Sequential(
-            nn.Conv2d(100, 1, 1, stride=1),  #8*20
-            nn.BatchNorm2d(1),
+            nn.Conv2d(100, 100, 1, stride=1),  #8*20
+            nn.BatchNorm2d(100),
             nn.ReLU(inplace=True),
-            nn.Conv2d(1, 1, kernel_size=(1, 20), stride=(1, 1))
+            nn.Conv2d(100, 100, kernel_size=(1, 20), stride=(1, 1))
         )
         self.features2 = nn.Sequential(
             nn.Conv2d(100, 100,kernel_size=(1,20), stride=(1,1)),  # 8*20
             nn.BatchNorm2d(100),
             nn.ReLU(inplace=True),
-            nn.Conv2d(100, 1, kernel_size=(1, 1), stride=(1, 1)),
         )
         self.features3=nn.Sequential(
             nn.Conv2d(100,100,kernel_size=(1,8),stride=(1,1)),
             nn.BatchNorm2d(100),
             nn.ReLU(inplace=True),
-            nn.Conv2d(100, 1, kernel_size=(1, 1), stride=(1, 1)),
         )
         self.features4 = nn.Sequential(
-            nn.Conv2d(100, 1, 1, stride=1),  # 8*20
-            nn.BatchNorm2d(1),
+            nn.Conv2d(100, 100, 1, stride=1),  # 8*20
+            nn.BatchNorm2d(100),
             nn.ReLU(inplace=True),
-            nn.Conv2d(1, 1, kernel_size=(1, 8), stride=(1, 1))
+            nn.Conv2d(100, 100, kernel_size=(1, 8), stride=(1, 1))
         )
         self.classfiar=nn.Sequential(
-            nn.Linear(in_features=8*2+20*2, out_features=2)
+            nn.Linear(in_features=56*100, out_features=2)
         )
     def forward(self,x):
         # print("0000000000")
@@ -50,7 +48,7 @@ class ConvNet(nn.Module):
         x3=(self.features3(x.permute((0,3,2,1))))  #100*20*8
         x4=(self.features3(x.permute((0,3,2,1))))
         x=torch.cat((x1,x2,x3,x4),2)
-        x = x.view(-1, 56)
+        x = x.view(-1, 56*100)
         # print(">>>>>>>>>>")
         # print(x)
         x=self.classfiar(x)
