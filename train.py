@@ -29,7 +29,7 @@ class Process:
         self.train_loader=DataLoader(dataset=train_set,batch_size=self.batch_size,shuffle=True,num_workers=0)
         self.val_loader = DataLoader(dataset=val_set, batch_size=self.batch_size, shuffle=True, num_workers=0)
         self.loss=nn.CrossEntropyLoss()
-        self.optim=optim.SGD(self.net.parameters(),lr=self.lr,momentum=0.9,weight_decay=0.1)
+        self.optim=optim.SGD(self.net.parameters(),lr=self.lr,momentum=0.9,weight_decay=0.001)
         #存储结果最好的模型参数
         self.best_model = ''
         # 存储训练结果为.csv文件

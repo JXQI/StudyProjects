@@ -108,12 +108,12 @@ if __name__=='__main__':
     for i in number.keys():
         print(i,number[i])
     #划分数据集
-    divide=d.divide_data([0.8,0.2])
+    #divide=d.divide_data([0.8,0.2])
     # for key in divide.keys():
     #     for i in divide[key].keys():
     #         print(key,i,len(divide[key][i]))
     #age和sex
     #print(d.get_age())
     #print(d.get_sex())
-    #d.hist_distributed_age_sex()
+    d.hist_distributed_age_sex()
 
