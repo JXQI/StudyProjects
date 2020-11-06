@@ -111,6 +111,34 @@ class Linear_3(nn.Module):
         x=self.features(x)
 
         return x
+class Linear_Sig_3(nn.Module):
+    def __init__(self,isDrop=True,p=0.2):
+        super(Linear_Sig_3, self).__init__()
+        self.isDrop=[isDrop,p]
+        self.name='Linear_Sig_3'
+        if self.isDrop:
+            self.features=nn.Sequential(
+                nn.Linear(8*20*100,8192),
+                nn.Sigmoid(),
+                nn.Dropout(self.isDrop[1]),
+                nn.Linear(8192, 4096),
+                nn.Sigmoid(),
+                nn.Dropout(0.5),
+                nn.Linear(4096, 2),
+            )
+        else:
+            self.features = nn.Sequential(
+                nn.Linear(8 * 20 * 100, 8192),
+                nn.Sigmoid(),
+                nn.Linear(8192, 4096),
+                nn.Sigmoid(),
+                nn.Linear(4096, 2),
+            )
+    def forward(self,x):
+        x=x.view(-1,8*20*100)
+        x=self.features(x)
+
+        return x
 
 #模型调用窗口
 class Model:
@@ -127,6 +155,8 @@ class Model:
             Model = Linear_3(isDrop=self.isDrop)
         elif self.net=='ConvNet':
             Model = ConvNet()
+        elif self.net=="Linear_Sig_3":
+            Model = Linear_Sig_3()
         if self.pretrained:
             Model.load_state_dict(torch.load(self.Weight_path))
         return Model

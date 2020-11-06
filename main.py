@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 if __name__=='__main__':
     #Function(sys.argv)
     parse=argparse.ArgumentParser(description="train or test")
-    parse.add_argument('--net', type=str,default='ConvNet',help='select the model to train and test')
+    parse.add_argument('--net', type=str,default='Linear_Sig_3',help='select the model to train and test')
     parse.add_argument('--pretrained', type=bool, default=False, help='if model pretrained')
     parse.add_argument('--Weight_path', type=str, default="./Weights/*", help='add the pre_Weight')
     parse.add_argument('--isDrop', type=bool,default=True, help='if add the dropout layer and the probility')
