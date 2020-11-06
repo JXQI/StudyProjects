@@ -38,7 +38,7 @@ class ConvNet_2D(nn.Module):
         return x
 class ConvNet_sigmoid(nn.Module):
     def __init__(self):
-        super(ConvNet, self).__init__()
+        super(ConvNet_sigmoid, self).__init__()
         self.name='ConvNet_sigmoid'
         self.features1 = nn.Sequential(
             nn.Conv2d(100, 100, 1, stride=1),  #8*20
