@@ -39,7 +39,7 @@ class ConvNet_2D(nn.Module):
 class ConvNet_sigmoid(nn.Module):
     def __init__(self):
         super(ConvNet, self).__init__()
-        self.name='ConvNet'
+        self.name='ConvNet_sigmoid'
         self.features1 = nn.Sequential(
             nn.Conv2d(100, 100, 1, stride=1),  #8*20
             nn.BatchNorm2d(100),
@@ -236,6 +236,8 @@ class Model:
             Model = Linear_Sig_3()
         elif self.net=="ConvNet_2D":
             Model = ConvNet_2D()
+        elif self.net == 'ConvNet_sigmoid':
+            Model = ConvNet_sigmoid()
         if self.pretrained:
             Model.load_state_dict(torch.load(self.Weight_path))
         return Model
