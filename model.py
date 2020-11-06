@@ -32,7 +32,7 @@ class ConvNet_2D(nn.Module):
         # print("0000000000")
         # print(x)
         x1=self.feature(x.permute((0,3,1,2))) #100*8*20
-        x1 = x1.view(-1, 400*4*16)
+        x1 = x1.reshape(-1, 400*4*16)
         x=self.classfiar(x1)
 
         return x
@@ -66,6 +66,7 @@ class ConvNet(nn.Module):
             nn.ReLU(inplace=True),
         )
         self.classfiar=nn.Sequential(
+            nn.Dropout(p=0.2),
             nn.Linear(in_features=56*100, out_features=2)
         )
     def forward(self,x):
