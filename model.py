@@ -9,6 +9,34 @@ from pandas import DataFrame
 import os
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
+
+#2D卷积
+class ConvNet_2D(nn.Module):
+    def __init__(self):
+        super(ConvNet_2D, self).__init__()
+        self.name="ConvNet_2D"
+        self.feature=nn.Sequential(
+            nn.Conv2d(100, 200, 3, stride=1),
+            nn.BatchNorm2d(200),
+            nn.ReLU(inplace=True),
+            nn.MaxPool2d(kernel_size=3, stride=1, padding=1),
+            nn.Conv2d(200, 400, 3, stride=1),
+            nn.BatchNorm2d(400),
+            nn.ReLU(inplace=True),
+        )
+        #self.avger=nn.AdaptiveAvgPool2d((1, 1))  #TODO:看看后续有没有需要
+        self.classfiar = nn.Sequential(
+            nn.Linear(in_features=400*4*16, out_features=2)
+        )
+    def forward(self,x):
+        # print("0000000000")
+        # print(x)
+        x1=self.feature(x.permute((0,3,1,2))) #100*8*20
+        x1 = x1.view(-1, 400*4*16)
+        x=self.classfiar(x1)
+
+        return x
+
 class ConvNet(nn.Module):
     def __init__(self):
         super(ConvNet, self).__init__()
@@ -17,7 +45,8 @@ class ConvNet(nn.Module):
             nn.Conv2d(100, 100, 1, stride=1),  #8*20
             nn.BatchNorm2d(100),
             nn.ReLU(inplace=True),
-            nn.Conv2d(100, 100, kernel_size=(1, 20), stride=(1, 1))
+            nn.Conv2d(100, 100, kernel_size=(1, 20), stride=(1, 1)),
+            nn.ReLU(inplace=True),
         )
         self.features2 = nn.Sequential(
             nn.Conv2d(100, 100,kernel_size=(1,20), stride=(1,1)),  # 8*20
@@ -33,7 +62,8 @@ class ConvNet(nn.Module):
             nn.Conv2d(100, 100, 1, stride=1),  # 8*20
             nn.BatchNorm2d(100),
             nn.ReLU(inplace=True),
-            nn.Conv2d(100, 100, kernel_size=(1, 8), stride=(1, 1))
+            nn.Conv2d(100, 100, kernel_size=(1, 8), stride=(1, 1)),
+            nn.ReLU(inplace=True),
         )
         self.classfiar=nn.Sequential(
             nn.Linear(in_features=56*100, out_features=2)
@@ -155,6 +185,8 @@ class Model:
             Model = ConvNet()
         elif self.net=="Linear_Sig_3":
             Model = Linear_Sig_3()
+        elif self.net=="ConvNet_2D":
+            Model = ConvNet_2D()
         if self.pretrained:
             Model.load_state_dict(torch.load(self.Weight_path))
         return Model
