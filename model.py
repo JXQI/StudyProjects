@@ -36,7 +36,55 @@ class ConvNet_2D(nn.Module):
         x=self.classfiar(x1)
 
         return x
-
+class ConvNet_sigmoid(nn.Module):
+    def __init__(self):
+        super(ConvNet, self).__init__()
+        self.name='ConvNet'
+        self.features1 = nn.Sequential(
+            nn.Conv2d(100, 100, 1, stride=1),  #8*20
+            nn.BatchNorm2d(100),
+            nn.Sigmoid(),
+            nn.Conv2d(100, 100, kernel_size=(1, 20), stride=(1, 1)),
+            nn.Sigmoid(),
+        )
+        self.features2 = nn.Sequential(
+            nn.Conv2d(100, 100,kernel_size=(1,20), stride=(1,1)),  # 8*20
+            nn.BatchNorm2d(100),
+            nn.Sigmoid(),
+        )
+        self.features3=nn.Sequential(
+            nn.Conv2d(100,100,kernel_size=(1,8),stride=(1,1)),
+            nn.BatchNorm2d(100),
+            nn.Sigmoid(),
+        )
+        self.features4 = nn.Sequential(
+            nn.Conv2d(100, 100, 1, stride=1),  # 8*20
+            nn.BatchNorm2d(100),
+            nn.Sigmoid(),
+            nn.Conv2d(100, 100, kernel_size=(1, 8), stride=(1, 1)),
+            nn.Sigmoid(),
+        )
+        self.classfiar=nn.Sequential(
+            nn.Dropout(p=0.2),
+            nn.Linear(in_features=56*100, out_features=2)
+        )
+    def forward(self,x):
+        # print("0000000000")
+        # print(x)
+        x1=self.features1(x.permute((0,3,1,2))) #100*8*20
+        # print("111111111")
+        # print(x1)
+        x2=(self.features2(x.permute((0,3,1,2)))) #100*8*20
+        x3=(self.features3(x.permute((0,3,2,1))))  #100*20*8
+        x4=(self.features3(x.permute((0,3,2,1))))
+        x=torch.cat((x1,x2,x3,x4),2)
+        x = x.view(-1, 56*100)
+        # print(">>>>>>>>>>")
+        # print(x)
+        x=self.classfiar(x)
+        # print("-----")
+        # print(x)
+        return x
 class ConvNet(nn.Module):
     def __init__(self):
         super(ConvNet, self).__init__()
