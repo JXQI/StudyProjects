@@ -4,7 +4,7 @@ from os.path import join
 import numpy as np
 import torch
 from torchvision import transforms
-from data_deal import deal_all
+from data_deal import load_data
 from pandas import DataFrame
 
 class dataloader(Dataset):
@@ -26,7 +26,8 @@ class dataloader(Dataset):
                 self.labels.append(self.class_d[line[1]])
                 self.features.append(line[0])
         #这里初始化就将处理好的数据加载进内存中来
-        self.data=deal_all(self.features,self.path,self.transforms)
+        #self.data=deal_all(self.features,self.path,self.transforms)
+        self.data=load_data(self_features=self.features,self_path=self.path,self_transforms=self.transforms,Is_normalize=True)
     def __len__(self):
         return len(self.data)
     def __getitem__(self, item):

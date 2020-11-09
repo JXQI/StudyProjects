@@ -14,6 +14,10 @@ pip install -r requirements.txt
 执行方式：python data_divide.py  其中默认参数 测试集：验证集=8：2 ratio=[0.8,0.2]  
 执行结果：当前路径下生成train.txt和val.txt两个文件  
 
-3.运行：  
-执行方式：python train.py
+3.对原始数据进行处理，并且生成新的文件：0_0.csv等文件  
+执行方式：python data_deal.py  
+执行结果：./data路径下生成对应的0_0.csv文件  
+
+4.运行：  
+执行方式： ./run.sh
 
