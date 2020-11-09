@@ -202,8 +202,9 @@ def generate_dictory(path,d):
             d_feature[feature_keys[dim1]].append(sum / count)
             plt.plot(range(len(sum)), sum / count, label="average")
             plt.savefig(join(path, str(dim1) + '_' + str(dim2) + '.jpg'))
-            plt.legend()
-            plt.show()
+            #TODO:这两行调试的时候可以看，但运行的时候最好注释掉，不然程序会卡住
+            #plt.legend()
+            #plt.show()
     # 保存dictory文件
     pd.DataFrame.from_dict(data=d_feature, orient='index').to_csv('dictory.csv')
 
