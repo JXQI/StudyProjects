@@ -211,4 +211,5 @@ if __name__=='__main__':
     #TODO:预处理数据，并且生成新的特征文件0_0.csv等
     self_features=[str(i) for i in range(700)]
     self_path='./data'
-    load_all_features(self_features, self_path)
+    self_transforms=transforms.Compose([transforms.ToTensor()])
+    load_save_data(self_features, self_path, self_transforms, Is_normalize=True)
