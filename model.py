@@ -117,20 +117,34 @@ class ConvNet(nn.Module):
             nn.Dropout(p=0.2),
             nn.Linear(in_features=56*100, out_features=2)
         )
+        self.classfiar_as = nn.Sequential(
+            nn.Dropout(p=0.2),
+            nn.Linear(in_features=56 * 100+2, out_features=2)
+        )
     def forward(self,x):
         # print("0000000000")
         # print(x)
-        x1=self.features1(x.permute((0,3,1,2))) #100*8*20
+        #TODO:这里引入了年龄和性别信息
+        x_f=x[0]  #这里是纤维素的信息 （8，20，100）
+        x_as=x[1]   #这里是性别和年龄的信息[2,1]
+        x1=self.features1(x_f.permute((0,3,1,2))) #100*8*20
         # print("111111111")
         # print(x1)
-        x2=(self.features2(x.permute((0,3,1,2)))) #100*8*20
-        x3=(self.features3(x.permute((0,3,2,1))))  #100*20*8
-        x4=(self.features3(x.permute((0,3,2,1))))
+        x2=(self.features2(x_f.permute((0,3,1,2)))) #100*8*20
+        x3=(self.features3(x_f.permute((0,3,2,1))))  #100*20*8
+        x4=(self.features3(x_f.permute((0,3,2,1))))
         x=torch.cat((x1,x2,x3,x4),2)
         x = x.view(-1, 56*100)
         # print(">>>>>>>>>>")
         # print(x)
-        x=self.classfiar(x)
+        #TODO:引入年龄和性别特征
+        age_sex=True
+        if age_sex:
+            x_as=x_as.view(-1,2)
+            x=torch.cat((x,x_as),1)
+            x=self.classfiar_as(x)
+        else:
+            x=self.classfiar(x)
         # print("-----")
         # print(x)
         return x

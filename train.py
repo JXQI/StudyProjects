@@ -50,7 +50,8 @@ class Process:
             self.net.train()
             for i,data in enumerate(self.train_loader,0):
                 self.optim.zero_grad()
-                inputs,labels=data[0].to(self.device),data[1].to(self.device)
+                inputs=[0,0]
+                inputs[0],inputs[1],labels=data[0][0].to(self.device),data[0][1].to(self.device),data[1].to(self.device)
                 #print(inputs,labels)
                 output=self.net(inputs)
                 #print(output,labels)

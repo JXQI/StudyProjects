@@ -27,7 +27,7 @@ class dataloader(Dataset):
                 self.features.append(line[0])
         #这里初始化就将处理好的数据加载进内存中来
         #self.data=deal_all(self.features,self.path,self.transforms)
-        self.data=load_data(self_features=self.features,self_path=self.path,self_transforms=self.transforms,Is_normalize=True)
+        self.data=load_data(self_features=self.features,self_path=self.path,self_transforms=self.transforms)
     def __len__(self):
         return len(self.data)
     def __getitem__(self, item):
@@ -38,7 +38,8 @@ class dataloader(Dataset):
 if __name__=='__main__':
     transform = transforms.Compose([transforms.ToTensor()])
     d=dataloader(path='./data',transforms=transform)
-    print(len(d))
+    data,label=d[1]
+    print(data[1])
     #f,l=d[0]
     # print(f.shape)
     # print(f[6][0],l)

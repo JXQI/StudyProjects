@@ -113,7 +113,10 @@ if __name__=='__main__':
     #     for i in divide[key].keys():
     #         print(key,i,len(divide[key][i]))
     #age和sex
-    #print(d.get_age())
-    #print(d.get_sex())
+    print(d.get_age())
+    print(d.get_sex())
+    #求年龄平均值
+    age=sum(d.get_age().values())/3
+    print("averge_age:%f"%age)
     d.hist_distributed_age_sex()
 

@@ -22,7 +22,8 @@ def Accuracy(net,dataloader,loss_function,device):
     label,target,predict=[],[],[]
     with torch.no_grad():
         for i,data in enumerate(dataloader,0):
-            inputs=data[0].to(device)
+            inputs=[0,0]
+            inputs[0],inputs[1]=data[0][0].to(device),data[0][1].to(device)
             labels=data[1].to(device)
             net=net.to(device)
             outputs=net(inputs)

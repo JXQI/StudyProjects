@@ -7,6 +7,8 @@ import torchvision.transforms as transforms
 from matplotlib import pyplot as plt
 from collections import defaultdict
 import pandas as pd
+import torch
+from settings import AGE_MEAN
 
 # #TODO:这个求法只是为了让程序暂且通过，后续需要更改：1.计算方式，2.函数实现方式
 # def get_dictory():
@@ -117,7 +119,19 @@ def normalize(data):
             data[dim1][dim2]=df_norm.values
             #print(df_norm.max(),df_norm.min())
     return data
-
+#融入年龄和性别信息,返回所有病人的年龄和性别信息
+def age_sex():
+    feature = []
+    with open("./data/data_result.csv") as f:
+        next(f)
+        reader = csv.reader(f)
+        for row in reader:
+            temp = []
+            for i in row[1:]:
+                temp.append(list(map(float, i.replace('\n', '').replace('[', '').replace(']', '').split())))
+            feature.append(temp)
+    features=list(zip(feature[1], feature[2]))
+    return features
 #将预处理过的特征送进去loader.py,同时将处理后的数据存进新的文件中，避免重复计算
 def load_save_data(self_features,self_path,self_transforms,Is_normalize):
     dictory_name = "dictory.csv"
@@ -137,12 +151,17 @@ def load_save_data(self_features,self_path,self_transforms,Is_normalize):
         data[item]=features
     return data
 #从处理后的文件中加载特征
-def load_data(self_features,self_path,self_transforms,Is_normalize):
+def load_data(self_features,self_path,self_transforms):
     data = []
+    age_sex_data = age_sex()  # 求的所有样本的年龄和性别信息
     for item in range(len(self_features)):
         print("数据加载进度：%d/%d" % (item, len(self_features)))
         filename = join(self_path, "0_"+self_features[item] + '.csv')
-        features = []
+        features = []      #包含每个病人的纤维素特征
+        all_feature = []  # 包含每个病人的纤维素特征和年龄性别特征
+        age_sex_feature=age_sex_data[int(self_features[item])]
+        #这里求（年龄值-平均值）/平均值 的结果作为特征输入
+        age_sex_feature[1][0]=(age_sex_feature[1][0]-AGE_MEAN)/AGE_MEAN
         with open(filename) as f:
             next(f)
             reader = csv.reader(f)
@@ -154,9 +173,15 @@ def load_data(self_features,self_path,self_transforms,Is_normalize):
         # TODO:这里暂时丢掉最后一维特征，为了保证数据数量级一样，避免特征消失features[:7]
         # features = np.around(np.array(features[:7], dtype=np.float32), decimals=3)  # TODO:为啥后边有那么多的0
         features = np.around(np.array(features, dtype=np.float32), decimals=3)
+        age_sex_feature=np.array(age_sex_feature,dtype=np.float32)
         features = features.transpose((1, 2, 0))  # TODO:需用补充一下转换的时候各种转置关系，以及和torch的转换关系
-        if self_transforms: features = self_transforms(features)
-        data.append(features)
+        if self_transforms:
+            features = self_transforms(features)
+            age_sex_feature=torch.tensor(age_sex_feature)
+
+        all_feature.append(features)
+        all_feature.append(age_sex_feature)
+        data.append(all_feature)
     return data
 #将./data下的所有特征文件读取到内存中来
 def load_all_features(self_features,self_path):
