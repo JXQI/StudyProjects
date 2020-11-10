@@ -7,16 +7,17 @@ import numpy as np
 import random
 
 #设置随机种子
-torch.manual_seed(7) # cpu
-torch.cuda.manual_seed(7) #gpu
-np.random.seed(7) #numpy
-random.seed(7) #random and transforms
+SED=7
+torch.manual_seed(SED) # cpu
+torch.cuda.manual_seed(SED) #gpu
+np.random.seed(SED) #numpy
+random.seed(SED) #random and transforms
 torch.backends.cudnn.deterministic=True # cudnn
 
 if __name__=='__main__':
     #Function(sys.argv)
     parse=argparse.ArgumentParser(description="train or test")
-    parse.add_argument('--net', type=str,default='ConvNet_18',help='select the model to train and test')
+    parse.add_argument('--net', type=str,default='ConvNet',help='select the model to train and test')
     parse.add_argument('--pretrained', type=bool, default=False, help='if model pretrained')
     parse.add_argument('--Weight_path', type=str, default="./Weights/*", help='add the pre_Weight')
     parse.add_argument('--isDrop', type=bool,default=True, help='if add the dropout layer and the probility')
