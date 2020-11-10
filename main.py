@@ -3,7 +3,15 @@ import torch
 from send_mail import sentemail
 import argparse
 from train import Process
-import matplotlib.pyplot as plt
+import numpy as np
+import random
+
+#设置随机种子
+torch.manual_seed(7) # cpu
+torch.cuda.manual_seed(7) #gpu
+np.random.seed(7) #numpy
+random.seed(7) #random and transforms
+torch.backends.cudnn.deterministic=True # cudnn
 
 if __name__=='__main__':
     #Function(sys.argv)

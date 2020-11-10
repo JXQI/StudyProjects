@@ -58,7 +58,7 @@ if __name__=='__main__':
     d=data_load(filename=filename,save_path=save_path)
     #如果已经存在，就不要反复执行，因为会重新生成文件
     d.single_dimenon_feature()
-    d.AFQ_feature()
+    #d.AFQ_feature()
 
 
 
