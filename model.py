@@ -148,7 +148,70 @@ class ConvNet(nn.Module):
         # print("-----")
         # print(x)
         return x
-
+#去除第六和第七列
+class ConvNet_18(nn.Module):
+    def __init__(self):
+        super(ConvNet_18, self).__init__()
+        self.name='ConvNet_18'
+        self.features1 = nn.Sequential(
+            nn.Conv2d(100, 100, 1, stride=1),  #8*18
+            nn.BatchNorm2d(100),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(100, 100, kernel_size=(1, 18), stride=(1, 1)),
+            nn.ReLU(inplace=True),
+        )
+        self.features2 = nn.Sequential(
+            nn.Conv2d(100, 100,kernel_size=(1,18), stride=(1,1)),  # 8*20
+            nn.BatchNorm2d(100),
+            nn.ReLU(inplace=True),
+        )
+        self.features3=nn.Sequential(
+            nn.Conv2d(100,100,kernel_size=(1,8),stride=(1,1)),
+            nn.BatchNorm2d(100),
+            nn.ReLU(inplace=True),
+        )
+        self.features4 = nn.Sequential(
+            nn.Conv2d(100, 100, 1, stride=1),  # 8*20
+            nn.BatchNorm2d(100),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(100, 100, kernel_size=(1, 8), stride=(1, 1)),
+            nn.ReLU(inplace=True),
+        )
+        self.classfiar=nn.Sequential(
+            nn.Dropout(p=0.2),
+            nn.Linear(in_features=52*100, out_features=2)
+        )
+        self.classfiar_as = nn.Sequential(
+            nn.Dropout(p=0.2),
+            nn.Linear(in_features=52 * 100+2, out_features=2)
+        )
+    def forward(self,x):
+        # print("0000000000")
+        # print(x)
+        #TODO:这里引入了年龄和性别信息
+        x_f=x[0] #这里是纤维素的信息 （8，20，100）
+        x_as=x[1]   #这里是性别和年龄的信息[2,1]
+        x1=self.features1(x_f.permute((0,3,1,2))) #100*8*20
+        # print("111111111")
+        # print(x1)
+        x2=(self.features2(x_f.permute((0,3,1,2)))) #100*8*20
+        x3=(self.features3(x_f.permute((0,3,2,1))))  #100*20*8
+        x4=(self.features3(x_f.permute((0,3,2,1))))
+        x=torch.cat((x1,x2,x3,x4),2)
+        x = x.view(-1, 52*100)
+        # print(">>>>>>>>>>")
+        # print(x)
+        #TODO:引入年龄和性别特征
+        age_sex=True
+        if age_sex:
+            x_as=x_as.view(-1,2)
+            x=torch.cat((x,x_as),1)
+            x=self.classfiar_as(x)
+        else:
+            x=self.classfiar(x)
+        # print("-----")
+        # print(x)
+        return x
 #两层FCN
 class Linear_2(nn.Module):
     def __init__(self,isDrop=True,p=0.2):
@@ -246,6 +309,8 @@ class Model:
             Model = Linear_3(isDrop=self.isDrop)
         elif self.net=='ConvNet':
             Model = ConvNet()
+        elif self.net=='ConvNet_18':
+            Model = ConvNet_18()
         elif self.net=="Linear_Sig_3":
             Model = Linear_Sig_3()
         elif self.net=="ConvNet_2D":

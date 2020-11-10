@@ -151,7 +151,7 @@ def load_save_data(self_features,self_path,self_transforms,Is_normalize):
         data[item]=features
     return data
 #从处理后的文件中加载特征
-def load_data(self_features,self_path,self_transforms):
+def load_data(self_features,self_path,self_transforms,Is_18=True):
     data = []
     age_sex_data = age_sex()  # 求的所有样本的年龄和性别信息
     for item in range(len(self_features)):
@@ -169,10 +169,13 @@ def load_data(self_features,self_path,self_transforms):
                 temp = []
                 for i in row[1:]:
                     temp.append(list(map(float, i.replace('\n', '').replace('[', '').replace(']', '').split())))
+                if Is_18:
+                    temp=temp[:6]+temp[8:]
                 features.append(temp)
         # TODO:这里暂时丢掉最后一维特征，为了保证数据数量级一样，避免特征消失features[:7]
         # features = np.around(np.array(features[:7], dtype=np.float32), decimals=3)  # TODO:为啥后边有那么多的0
         features = np.around(np.array(features, dtype=np.float32), decimals=3)
+        #print(features.shape)
         age_sex_feature=np.array(age_sex_feature,dtype=np.float32)
         features = features.transpose((1, 2, 0))  # TODO:需用补充一下转换的时候各种转置关系，以及和torch的转换关系
         if self_transforms:
@@ -182,6 +185,7 @@ def load_data(self_features,self_path,self_transforms):
         all_feature.append(features)
         all_feature.append(age_sex_feature)
         data.append(all_feature)
+
     return data
 #将./data下的所有特征文件读取到内存中来
 def load_all_features(self_features,self_path):
