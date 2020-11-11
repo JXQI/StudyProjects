@@ -114,11 +114,11 @@ class ConvNet(nn.Module):
             nn.ReLU(inplace=True),
         )
         self.classfiar=nn.Sequential(
-            nn.Dropout(p=0.2),
+            nn.Dropout(p=0.5),
             nn.Linear(in_features=56*100, out_features=2)
         )
         self.classfiar_as = nn.Sequential(
-            nn.Dropout(p=0.2),
+            nn.Dropout(p=0.5),
             nn.Linear(in_features=56 * 100+2, out_features=2)
         )
     def forward(self,x):
@@ -178,11 +178,11 @@ class ConvNet_18(nn.Module):
             nn.ReLU(inplace=True),
         )
         self.classfiar=nn.Sequential(
-            nn.Dropout(p=0.2),
+            nn.Dropout(p=0.5),
             nn.Linear(in_features=52*100, out_features=2)
         )
         self.classfiar_as = nn.Sequential(
-            nn.Dropout(p=0.2),
+            nn.Dropout(p=0.5),
             nn.Linear(in_features=52 * 100+2, out_features=2)
         )
     def forward(self,x):
