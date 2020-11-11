@@ -86,7 +86,7 @@ class ConvNet_sigmoid(nn.Module):
         # print(x)
         return x
 class ConvNet(nn.Module):
-    def __init__(self):
+    def __init__(self,num_class):
         super(ConvNet, self).__init__()
         self.name='ConvNet'
         self.features1 = nn.Sequential(
@@ -119,7 +119,7 @@ class ConvNet(nn.Module):
         )
         self.classfiar_as = nn.Sequential(
             nn.Dropout(p=0.5),
-            nn.Linear(in_features=56 * 100+2, out_features=2)
+            nn.Linear(in_features=56 * 100+2, out_features=num_class),
         )
     def forward(self,x):
         # print("0000000000")
@@ -150,7 +150,7 @@ class ConvNet(nn.Module):
         return x
 #去除第六和第七列
 class ConvNet_18(nn.Module):
-    def __init__(self):
+    def __init__(self,num_class):
         super(ConvNet_18, self).__init__()
         self.name='ConvNet_18'
         self.features1 = nn.Sequential(
@@ -183,7 +183,7 @@ class ConvNet_18(nn.Module):
         )
         self.classfiar_as = nn.Sequential(
             nn.Dropout(p=0.5),
-            nn.Linear(in_features=52 * 100+2, out_features=2)
+            nn.Linear(in_features=52 * 100+2, out_features=num_class)
         )
     def forward(self,x):
         # print("0000000000")
@@ -296,11 +296,12 @@ class Linear_Sig_3(nn.Module):
 
 #模型调用窗口
 class Model:
-    def __init__(self,Weight_path=' ',net='Linear_2',pretrained=False,isDrop=(False,0.2)):
+    def __init__(self,num_class,Weight_path=' ',net='Linear_2',pretrained=False,isDrop=(False,0.2)):
         self.net=net
         self.pretrained=pretrained
         self.Weight_path=Weight_path
         self.isDrop=isDrop
+        self.num_class=num_class
 
     def Net(self):
         if self.net=='Linear_2':
@@ -308,9 +309,9 @@ class Model:
         elif self.net=='Linear_3':
             Model = Linear_3(isDrop=self.isDrop)
         elif self.net=='ConvNet':
-            Model = ConvNet()
+            Model = ConvNet(num_class=self.num_class)
         elif self.net=='ConvNet_18':
-            Model = ConvNet_18()
+            Model = ConvNet_18(num_class=self.num_class)
         elif self.net=="Linear_Sig_3":
             Model = Linear_Sig_3()
         elif self.net=="ConvNet_2D":

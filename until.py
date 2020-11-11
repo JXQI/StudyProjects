@@ -119,6 +119,12 @@ class Draw_ROC:
         predict = np.abs(predict)
         score=f1_score(label,predict,average='micro')
         return score
+def one_hot(output,label):
+    output_=torch.zeros(label.size())
+    for i in range(label.size(0)):
+        output_[i][torch.max(output[i],0)[1]]=torch.tensor(1)
+    return output_
+
 
 if __name__ == '__main__':
     print("当前时间::" + time.strftime("%Y-%m-%d", time.localtime(time.time()))+'-'+time.strftime("%H-%M-%S",time.localtime(time.time())))

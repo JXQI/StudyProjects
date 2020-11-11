@@ -1,11 +1,12 @@
 from model import Model
-from loader import dataloader
+#from loader import dataloader
+from loader_mul import dataloader
 import torch
 from torch.utils.data import DataLoader
 import torch.nn as nn
 import torch.optim as optim
 import torchvision.transforms as transforms
-from until import Accuracy,drawline,SaveCsv,Draw_ROC
+from until import Accuracy,drawline,SaveCsv,Draw_ROC,one_hot
 from os.path import join
 import os
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
@@ -13,18 +14,19 @@ import operator
 from functools import reduce
 
 class Process:
-    def __init__(self,device,batch_size,lr=0.1,class_type='B',net='Linear_2',\
+    def __init__(self,device,batch_size,lr=0.1,num_class=2,net='Linear_2',\
                  pretrained=False,Weight_path='',isDrop=(False,0.2)):
         self.device = device
         self.batch_size=batch_size
         self.lr=lr
         self.isDrop=isDrop
-        self.model=Model(net=net,Weight_path=Weight_path,pretrained=pretrained,isDrop=self.isDrop)
+        self.num_class=num_class
+        self.model=Model(net=net,Weight_path=Weight_path,pretrained=pretrained,isDrop=self.isDrop,num_class=num_class)
         self.net=self.model.Net()
         self.net=self.net.to(self.device)
         self.transform = transforms.Compose([transforms.ToTensor()])
-        train_set=dataloader(path='./data',data_set='train',transforms=self.transform,class_type=class_type)
-        val_set=dataloader(path='./data',data_set='val',transforms=self.transform,class_type=class_type)
+        train_set=dataloader(path='./data',data_set='train',transforms=self.transform,num_class=num_class)
+        val_set=dataloader(path='./data',data_set='val',transforms=self.transform,num_class=num_class)
         print(len(train_set),len(val_set))
         self.train_loader=DataLoader(dataset=train_set,batch_size=self.batch_size,shuffle=True,num_workers=0)
         self.val_loader = DataLoader(dataset=val_set, batch_size=self.batch_size, shuffle=True, num_workers=0)
@@ -75,11 +77,11 @@ class Process:
             running_loss_arr_val.append(val_loss_arr)
 
             #计算roc_score
-            roc_score=self.roc.roc_score(labels, targets)
-            val_roc_score=self.roc.roc_score(val_labels, val_targets)
+            roc_score=self.roc.roc_score(labels, targets) if self.num_class==2 else 0
+            val_roc_score=self.roc.roc_score(val_labels, val_targets) if self.num_class==2 else 0
             #计算F1—score
-            F1_score = self.roc.f1_score(labels, predicts)
-            val_F1_score=self.roc.f1_score(val_labels, val_predicts)
+            F1_score = self.roc.f1_score(labels, predicts) if self.num_class==2 else 0
+            val_F1_score=self.roc.f1_score(val_labels, val_predicts) if self.num_class==2 else 0
             print("%d epoch the loss is %f,the train_accuarcy is %f,the val_AUC is %f,the val_F1-score is %f "%(j+1,loss_temp,acc_temp,roc_score,F1_score))
             print("%d epoch the loss is %f,the val_accuarcy is %f,the val_AUC is %f,the val_F1-score is %f " % (j + 1, val_loss, val_acc,val_roc_score,val_F1_score))
 
@@ -115,13 +117,17 @@ class Process:
         val_loss,val_acc,val_loss_arr,val_labels,val_targets,val_predicts=Accuracy(self.net,self.val_loader,self.loss,self.device)
         train_loss, train_acc, train_loss_arr,train_labels,train_targets,train_predicts= Accuracy(self.net, self.train_loader, self.loss, self.device)
         # 画出ROC曲线并且保存
-        self.roc.ROC(label=val_labels, predict=val_targets,name='val')
-        self.roc.ROC(label=train_labels, predict=train_targets,name='train')
+        if self.num_class==2:self.roc.ROC(label=val_labels, predict=val_targets,name='val')
+        if self.num_class==2:self.roc.ROC(label=train_labels, predict=train_targets,name='train')
         print(len(val_loss_arr),len(train_loss_arr))
         drawline(range(len(val_loss_arr)), val_loss_arr, "i", "loss", "the val_best_loss of the pre data")  # TODO:增加loss的显示
         drawline(range(len(train_loss_arr)), train_loss_arr, "i", "loss", "the train_best_loss of the pre data")  # TODO:增加loss的显示
-        print("The vol_loss is %f ,The accuarcy is %f,The roc_score is %f,f1_score is %f"%(val_loss,val_acc,self.roc.roc_score(val_labels,val_targets),self.roc.f1_score(val_labels,val_predicts)))
-        print("The train_loss is %f ,The accuarcy is %f,The roc_score is %f,f1_score is %f" % (train_loss, train_acc,self.roc.roc_score(val_labels,val_targets),self.roc.f1_score(train_labels,train_predicts)))
+        val_roc=self.roc.roc_score(val_labels, val_targets) if self.num_class==2 else 0
+        val_f1=self.roc.f1_score(val_labels, val_predicts) if self.num_class==2 else 0
+        train_roc=self.roc.roc_score(val_labels, val_targets) if self.num_class==2 else 0
+        train_f1=self.roc.f1_score(val_labels, val_predicts) if self.num_class==2 else 0
+        print("The vol_loss is %f ,The accuarcy is %f,The roc_score is %f,f1_score is %f"%(val_loss,val_acc,val_roc,val_f1))
+        print("The train_loss is %f ,The accuarcy is %f,The roc_score is %f,f1_score is %f" % (train_loss, train_acc,train_roc,train_f1))
 
 if __name__=="__main__":
     # device=torch.device("cuda:0" if torch.cuda.is_available() else "cpu")

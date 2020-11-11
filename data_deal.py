@@ -151,7 +151,7 @@ def load_save_data(self_features,self_path,self_transforms,Is_normalize):
         data[item]=features
     return data
 #从处理后的文件中加载特征
-def load_data(self_features,self_path,self_transforms,Is_18=True):
+def load_data(self_features,self_path,self_transforms,Is_18=False):
     data = []
     age_sex_data = age_sex()  # 求的所有样本的年龄和性别信息
     for item in range(len(self_features)):

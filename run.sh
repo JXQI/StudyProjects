@@ -1,1 +1,1 @@
-python main.py --epoch 2 --batch_size 16 --num_worker 8 --lr=0.1
+python main.py --num_class 3 --epoch 50 --batch_size 32 --num_worker 0 --lr=0.001 --net "ConvNet_18" --Weight_path='./Weights/best_Linear_0_55.pth' --isDrop=False

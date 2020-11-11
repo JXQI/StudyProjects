@@ -8,22 +8,25 @@ from data_deal import load_data
 from pandas import DataFrame
 
 class dataloader(Dataset):
-    def __init__(self,path,transforms=None,data_set='train',num_class=2):
+    def __init__(self,path,transforms=None,data_set='train',num_class=3):
         self.path=path
         self.transforms=transforms
         self.data_set=data_set+'.txt'
         self.num_class=num_class
         #self.class_d={"NC":1,"MCI":2,'AD':3}        #TODO:这里需要支持三分类
-        self.class_d = {"NC": 0, 'AD': 1} if self.num_class==2 else {"NC": 0, "MCI": 1, 'AD': 2}
+        self.class_d =['NC','MCI','AD'] if self.num_class==3 else ['NC','AD']
         self.features=[]
         self.labels=[]
 
         with open(self.data_set) as f:
             for line in f.readlines():
                 line=line.strip().split()
-                if self.class_type=='B' and line[1]=='MCI':
-                    continue
-                self.labels.append(self.class_d[line[1]])
+                # 标签写成one_hot形式
+                # self.one_hot = np.zeros(3)
+                # self.one_hot[self.class_d.index(line[1])]=1
+                # print(line[1],self.one_hot)
+                print(line[1])
+                self.labels.append(self.class_d.index(line[1]))
                 self.features.append(line[0])
         #这里初始化就将处理好的数据加载进内存中来
         #self.data=deal_all(self.features,self.path,self.transforms)
