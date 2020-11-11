@@ -6,7 +6,7 @@ from torch.utils.data import DataLoader
 import torch.nn as nn
 import torch.optim as optim
 import torchvision.transforms as transforms
-from until import Accuracy,drawline,SaveCsv,Draw_ROC,one_hot
+from until import Accuracy,drawline,SaveCsv,Draw_ROC,save_predict
 from os.path import join
 import os
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
@@ -116,6 +116,9 @@ class Process:
         self.net.eval()
         val_loss,val_acc,val_loss_arr,val_labels,val_targets,val_predicts=Accuracy(self.net,self.val_loader,self.loss,self.device)
         train_loss, train_acc, train_loss_arr,train_labels,train_targets,train_predicts= Accuracy(self.net, self.train_loader, self.loss, self.device)
+        #保存预测结果
+        save_predict(val_labels, val_predicts, val_targets,filename="val_output.csv")
+        save_predict(train_labels,train_predicts,train_targets,filename="train_output.csv")
         # 画出ROC曲线并且保存
         if self.num_class==2:self.roc.ROC(label=val_labels, predict=val_targets,name='val')
         if self.num_class==2:self.roc.ROC(label=train_labels, predict=train_targets,name='train')

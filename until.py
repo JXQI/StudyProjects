@@ -7,7 +7,7 @@ import time
 from sklearn.metrics import roc_curve,roc_auc_score,f1_score
 import torch.nn.functional as F
 import numpy as np
-
+from pandas import DataFrame
 
 # net:trained model
 # dataloader:dataloader class
@@ -125,16 +125,25 @@ def one_hot(output,label):
         output_[i][torch.max(output[i],0)[1]]=torch.tensor(1)
     return output_
 
+def save_predict(label,output,prob,filename="output_result.csv"):
+    #标签，输出，概率
+    data=[label,output,prob]
+    data=np.array(data).transpose()
+    DataFrame(data=data,columns=["label","output","prob"]).to_csv(filename,index=False)
 
 if __name__ == '__main__':
-    print("当前时间::" + time.strftime("%Y-%m-%d", time.localtime(time.time()))+'-'+time.strftime("%H-%M-%S",time.localtime(time.time())))
-    name = ['Net', 'batch_size', 'lr', "is_drop","epoch", "accu"]
-    sc = SaveCsv(name=name,path='./',file_name="hahahh.csv")
-    #sc.main()
-    #sc.saveAll()
-    for i in range(5):
-        list_name=[i,2,3,4,5,i]
-        sc.savefile(my_list=list_name,name=name)
+    # print("当前时间::" + time.strftime("%Y-%m-%d", time.localtime(time.time()))+'-'+time.strftime("%H-%M-%S",time.localtime(time.time())))
+    # name = ['Net', 'batch_size', 'lr', "is_drop","epoch", "accu"]
+    # sc = SaveCsv(name=name,path='./',file_name="hahahh.csv")
+    # #sc.main()
+    # #sc.saveAll()
+    # for i in range(5):
+    #     list_name=[i,2,3,4,5,i]
+    #     sc.savefile(my_list=list_name,name=name)
     # name=['id','uid','time']
     # df = pd.DataFrame(data=list, columns=name)
     # df.to_csv("./Result/result.csv", encoding="utf-8-sig", mode="a", header=True, index=False)
+    a=[1,2,3]
+    b=[4,5,6]
+    c=[0.1,0.1,0.8]
+    save_predict(a,b,c)
