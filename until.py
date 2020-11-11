@@ -31,7 +31,7 @@ def Accuracy(net,dataloader,loss_function,device):
             #将label和概率添加进列表中去
             for lp in range(len(labels)):
                 label.append(int(labels[lp]))
-                target.append(float(F.softmax(outputs[lp], dim=0)[1]))
+                target.append(float(F.softmax(outputs[lp], dim=0)[predicted[lp]]))
                 predict.append(int(predicted[lp]))
 
             # print(predicted,labels)
