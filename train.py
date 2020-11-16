@@ -14,10 +14,11 @@ import operator
 from functools import reduce
 
 class Process:
-    def __init__(self,device,batch_size,lr=0.1,num_class=2,net='Linear_2',\
+    def __init__(self,device,num_worker,batch_size,lr=0.1,num_class=2,net='Linear_2',\
                  pretrained=False,Weight_path='',isDrop=(False,0.2)):
         self.device = device
         self.batch_size=batch_size
+        self.num_worker=num_worker
         self.lr=lr
         self.isDrop=isDrop
         self.num_class=num_class
@@ -28,11 +29,13 @@ class Process:
         train_set=dataloader(path='./data',data_set='train',transforms=self.transform,num_class=num_class)
         val_set=dataloader(path='./data',data_set='val',transforms=self.transform,num_class=num_class)
         print(len(train_set),len(val_set))
-        self.train_loader=DataLoader(dataset=train_set,batch_size=self.batch_size,shuffle=True,num_workers=0)
-        self.val_loader = DataLoader(dataset=val_set, batch_size=self.batch_size, shuffle=True, num_workers=0)
+        self.train_loader=DataLoader(dataset=train_set,batch_size=self.batch_size,shuffle=True,num_workers=self.num_worker)
+        self.val_loader = DataLoader(dataset=val_set, batch_size=self.batch_size, shuffle=True, num_workers=self.num_worker)
         self.loss=nn.CrossEntropyLoss()
         #self.optim=optim.Adam(self.net.parameters(),lr=self.lr)
         self.optim=optim.SGD(self.net.parameters(),lr=self.lr,momentum=0.9,weight_decay=0.001)
+        #调整学习率
+        self.scheduler = optim.MultiStepLR(self.optim, milestones=[3, 7], gamma=0.1)
         #存储结果最好的模型参数
         self.best_model = ''
         # 存储训练结果为.csv文件
@@ -98,6 +101,9 @@ class Process:
                 max_acc=acc_temp
                 self.best_model='best_'+model_name
                 torch.save(self.net.state_dict(), join(path, self.best_model))
+            #更新学习率：
+            self.scheduler.step()
+            
         drawline(range(epoch),loss_list,"epoch","loss","the loss of train")
         drawline(range(epoch),acc_list, "epoch","accuarcy", "the accuracy of train")
         running_loss_arr = reduce(operator.add, running_loss_arr)

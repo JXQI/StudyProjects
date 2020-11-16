@@ -31,7 +31,7 @@ if __name__=='__main__':
     print(args)
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print(device)
-    pro = Process(device,batch_size=args.batch_size,lr=args.lr,num_class=args.num_class,
+    pro = Process(device,batch_size=args.batch_size,num_worker=args.num_worker,lr=args.lr,num_class=args.num_class,
                   net=args.net,pretrained=args.pretrained,Weight_path=args.Weight_path,isDrop=args.isDrop)
     pro.train(epoch=args.epoch)
     pro.validate()
