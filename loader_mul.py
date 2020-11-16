@@ -5,7 +5,7 @@ import numpy as np
 import torch
 from torchvision import transforms
 from data_deal import load_data
-from pandas import DataFrame
+from test import load_test_data
 
 class dataloader(Dataset):
     def __init__(self,path,transforms=None,data_set='train',num_class=3):

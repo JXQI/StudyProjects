@@ -15,4 +15,7 @@ FILENAME='MCAD_AFQ_competition.mat'
 #保存统计所有样本得到的年龄信息
 AGE_MEAN=68.016667
 
+#类别信息
+CLASS_D=['NC','MCI','AD']
+
 
