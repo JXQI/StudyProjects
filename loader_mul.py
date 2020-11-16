@@ -14,7 +14,7 @@ class dataloader(Dataset):
         self.data_set=data_set+'.txt'
         self.num_class=num_class
         #self.class_d={"NC":1,"MCI":2,'AD':3}        #TODO:这里需要支持三分类
-        self.class_d =['NC','AD','MCI']
+        self.class_d =['NC','MCI','AD']
         self.features=[]
         self.labels=[]
 
@@ -29,9 +29,11 @@ class dataloader(Dataset):
                     self.labels.append(self.class_d.index(line[1]))
                     self.features.append(line[0])
                 else:
-                    if line[1]!="MCI":
+                    if line[1]=="AD":
+                        self.labels.append(self.class_d.index(line[1])-1)
+                    else:
                         self.labels.append(self.class_d.index(line[1]))
-                        self.features.append(line[0])
+                    self.features.append(line[0])
         #这里初始化就将处理好的数据加载进内存中来
         #self.data=deal_all(self.features,self.path,self.transforms)
         self.data=load_data(self_features=self.features,self_path=self.path,self_transforms=self.transforms)
