@@ -35,7 +35,7 @@ class Process:
         #self.optim=optim.Adam(self.net.parameters(),lr=self.lr)
         self.optim=optim.SGD(self.net.parameters(),lr=self.lr,momentum=0.9,weight_decay=0.001)
         #调整学习率
-        self.scheduler = optim.MultiStepLR(self.optim, milestones=[3, 7], gamma=0.1)
+        self.scheduler = optim.lr_scheduler.MultiStepLR(self.optim, milestones=[200, 200], gamma=0.1)
         #存储结果最好的模型参数
         self.best_model = ''
         # 存储训练结果为.csv文件
@@ -103,7 +103,7 @@ class Process:
                 torch.save(self.net.state_dict(), join(path, self.best_model))
             #更新学习率：
             self.scheduler.step()
-            
+
         drawline(range(epoch),loss_list,"epoch","loss","the loss of train")
         drawline(range(epoch),acc_list, "epoch","accuarcy", "the accuracy of train")
         running_loss_arr = reduce(operator.add, running_loss_arr)
