@@ -127,7 +127,7 @@ class test():
                                        num_workers=self.num_worker)
     def result(self):
         self.net.eval()
-        result={"number":[],"predict":[],"probility":[]}
+        result={"number":[],"predict":[],"AD_probility":[],"MCI_probility":[],"NC_probility":[]}
 
         print("\n写入测试结果中...\n")
         tbar_loader=tqdm(self.test_loader)
@@ -138,16 +138,19 @@ class test():
                 outputs = self.net(inputs)
                 _, predicted = torch.max(outputs, 1)
                 # 将label和概率添加进列表中去
+                # self.class_d={"NC":1,"MCI":2,'AD':3}
                 target={"0":1,"1":2,'2':3}
                 for lp in range(len(outputs)):
                     result["number"].append(i*len(outputs)+lp+1)
-                    result["probility"].append(float(F.softmax(outputs[lp], dim=0)[2])) #TODO:修改的符合要求
+                    result["AD_probility"].append(round(float(F.softmax(outputs[lp], dim=0)[2]),3)) #TODO:修改的符合要求
+                    result["MCI_probility"].append(round(float(F.softmax(outputs[lp], dim=0)[0]),3))  # TODO:修改的符合要求
+                    result["NC_probility"].append(round(float(F.softmax(outputs[lp], dim=0)[1]),3))  # TODO:修改的符合要求
                     result["predict"].append(target[str(int(predicted[lp]))])
                     #result["predict"].append((int(predicted[lp])))
         #保存结果
-        data = [result["number"], result["predict"], result["probility"]]
+        data = [result["number"], result["predict"], result["AD_probility"],result["MCI_probility"],result["NC_probility"]]
         data = np.array(data).transpose()
-        DataFrame(data=data, columns=["被测序号", "预测标签", "AD类概率"]).to_csv("模型评估_三人行_模型1.csv", index=False)
+        DataFrame(data=data, columns=["被测序号", "预测标签", "AD类概率","NC概率","MCI概率"]).to_csv("模型评估_三人行_模型1.csv", index=False)
 
 if __name__=='__main__':
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
