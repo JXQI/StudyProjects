@@ -139,7 +139,7 @@ class test():
                 # 将label和概率添加进列表中去
                 target={"0":1,"1":2,'2':3}
                 for lp in range(len(outputs)):
-                    result["number"].append(i*len(outputs)+lp)
+                    result["number"].append(i*len(outputs)+lp+1)
                     result["probility"].append(float(F.softmax(outputs[lp], dim=0)[2])) #TODO:修改的符合要求
                     result["predict"].append(target[str(int(predicted[lp]))])
                     #result["predict"].append((int(predicted[lp])))

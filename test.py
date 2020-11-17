@@ -139,7 +139,7 @@ class test():
                 # 将label和概率添加进列表中去
                 target={"0":1,"1":3}
                 for lp in range(len(outputs)):
-                    result["number"].append(i*len(outputs)+lp)
+                    result["number"].append(i*len(outputs)+lp+1)
                     result["probility"].append(float(F.softmax(outputs[lp], dim=0)[1])) #TODO:修改的符合要求
                     result["predict"].append(target[str(int(predicted[lp]))])
                     #result["predict"].append((int(predicted[lp])))
@@ -150,5 +150,5 @@ class test():
 
 if __name__=='__main__':
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    T=test(device,num_worker=0,batch_size=32,num_class=2,net='ConvNet',Weight_path='./Weights/best_Linear_0_34.pth')
+    T=test(device,num_worker=0,batch_size=1,num_class=2,net='ConvNet',Weight_path='./Weights/best_Linear_0_34.pth')
     T.result()
