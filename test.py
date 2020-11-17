@@ -68,7 +68,7 @@ class data_load:
         #pd.DataFrame.from_dict(data=d_result, orient='index').to_csv(join(self.path, 'data_result.csv'))
         return list(zip(d_result['sex'], d_result['age']))
 
-def load_test_data(self_transforms=transforms.Compose([transforms.ToTensor()]),filename='MCAD_AFQ_test.mat', save_path='./test'):
+def load_test_data(self_transforms=transforms.Compose([transforms.ToTensor()]),filename='MCAD_AFQ_test.mat', save_path='./test',Is_18=False):
     test_data = data_load(filename, save_path)
     print("数据加载，并且进行预处理！")
     get_features=test_data.AFQ_feature()
@@ -83,6 +83,7 @@ def load_test_data(self_transforms=transforms.Compose([transforms.ToTensor()]),f
         age_sex_feature[1][0]=(age_sex_feature[1][0]-AGE_MEAN)/AGE_MEAN
 
         features = np.around(np.array(features, dtype=np.float32), decimals=3)
+        if Is_18:features=features[:6]+features[8:]
         age_sex_feature=np.array(age_sex_feature,dtype=np.float32)
         features = features.transpose((1, 2, 0))  # TODO:需用补充一下转换的时候各种转置关系，以及和torch的转换关系
         if self_transforms:
