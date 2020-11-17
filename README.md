@@ -19,5 +19,10 @@ pip install -r requirements.txt
 执行结果：./data路径下生成对应的0_0.csv文件  
 
 4.运行：  
-执行方式： ./run.sh
+执行方式： ./run.sh  
+
+TODO:  
+1.利用机器学习的方法去做分类  
+2.新的数据预处理方法  
+
 
