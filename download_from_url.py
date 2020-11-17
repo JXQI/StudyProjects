@@ -53,6 +53,13 @@ JQUFBQUFFSmdFZiIsImxlbiI6Njk1OTk1MTksIm5hbWUiOiJN\
 Q0FEX0FGUV9jb21wZXRpdGlvbi5tYXQiLCJwb3MiOjAsInNpem\
 UiOjY5NTk5NTE5fQ.238564386"
 
+url_test="https://pan.cstcloud.cn/unode/stor/\
+downloadByUrl?downloadId=1.eyJhZ2UiOjg2NDAwLCJidW\
+NrZXQiOiJkZWZhdWx0IiwiY3RpbWUiOjE2MDU1NzU2NjgsImtle\
+SI6Il9raV9WcGNzOGRMWS04OGNEN2V0MzJ0QWs0VUFBQUFBdjBjSC\
+IsImxlbiI6MTI1MzU1NTksIm5hbWUiOiJNQ0FEX0FGUV90ZXN0Lm1hd\
+CIsInBvcyI6MCwic2l6ZSI6MTI1MzU1NTl9.2210727054"
+
 def download_url_to_file(url, dst, hash_prefix=None, progress=True):
     req=Request(url)
     u = urlopen(req)
@@ -119,5 +126,6 @@ def download_dataset_from_url(url,path,filename):
 
 if __name__=='__main__':
     filename='MCAD_AFQ_competition.mat'
+    test_filename="MCAD_AFQ_test.mat"
     path='./'
-    download_dataset_from_url(url,path,filename)
+    download_dataset_from_url(url_test,path,test_filename)
