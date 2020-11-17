@@ -21,6 +21,12 @@ pip install -r requirements.txt
 4.运行：  
 执行方式： ./run.sh  
 
+5.测试方法：  
+修改test.py或者test_three.py的权重路径，生成文件名  
+对于二分类：python test.py  
+对于三分类：python test_three.py  
+
+
 TODO:  
 1.利用机器学习的方法去做分类  
 2.新的数据预处理方法  
