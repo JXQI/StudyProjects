@@ -54,11 +54,18 @@ model.eval()
 with torch.no_grad():
     prediction=model([img.to(device)])
     image=Image.fromarray(img.mul(255).permute(1,2,0).byte().numpy())
-    temp=label['masks'].mul(255).permute(1,2,0).byte().numpy()
-    if temp.shape[2]>1:
-        mask=Image.fromarray(temp)
-    else:
-        mask=Image.fromarray(temp.reshape(temp.shape[:2]))
+    #显示gd
+    ims_np = np.array(label['masks'], dtype="uint16")
+    mask = np.zeros(ims_np[0].shape)
+    print(mask.shape)
+    for i in range(len(ims_np)):
+        mask += ims_np[i] * (i + 1)  # 为了用不同的颜色显示出来
+    mask = Image.fromarray(mask).convert('L')
+    # temp=label['masks'].mul(255).permute(1,2,0).byte().numpy()
+    # if temp.shape[2]>1:
+    #     mask=Image.fromarray(temp)
+    # else:
+    #     mask=Image.fromarray(temp.reshape(temp.shape[:2]))
     #pre=Image.fromarray(prediction[0]['masks'][3,0].mul(255).byte().cpu().numpy())
     pres=np.zeros(prediction[0]['masks'].shape[1:])
     print(pres.shape)
