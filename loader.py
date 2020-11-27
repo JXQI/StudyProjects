@@ -28,7 +28,7 @@ class PennFudanDataset(object):
         obj_ids = np.unique(mask)
         # first id is the background, so remove it
         obj_ids = obj_ids[1:]
-
+        print(obj_ids)
         # split the color-encoded mask into a set
         # of binary masks
         masks = mask == obj_ids[:, None, None]
@@ -42,7 +42,7 @@ class PennFudanDataset(object):
             xmax = np.max(pos[1])
             ymin = np.min(pos[0])
             ymax = np.max(pos[0])
-            boxes.append([xmin, ymin, xmax, ymax])
+            boxes.append([xmin, ymin, xmax+1, ymax+1])    #TODO
 
         # convert everything into a torch.Tensor
         boxes = torch.as_tensor(boxes, dtype=torch.float32)

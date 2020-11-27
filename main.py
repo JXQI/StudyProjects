@@ -1,5 +1,17 @@
 from engine import train_one_epoch, evaluate
 import utils
+import torch
+import transforms as T
+from loader import PennFudanDataset
+from model import get_model_instance_segmentation
+import os
+
+def get_transform(train):
+    transforms = []
+    transforms.append(T.ToTensor())
+    if train:
+        transforms.append(T.RandomHorizontalFlip(0.5))
+    return T.Compose(transforms)
 
 
 def main():
@@ -12,18 +24,19 @@ def main():
     dataset = PennFudanDataset('PennFudanPed', get_transform(train=True))
     dataset_test = PennFudanDataset('PennFudanPed', get_transform(train=False))
 
+    print(len(dataset),len(dataset_test))
     # split the dataset in train and test set
     indices = torch.randperm(len(dataset)).tolist()
-    dataset = torch.utils.data.Subset(dataset, indices[:-50])
-    dataset_test = torch.utils.data.Subset(dataset_test, indices[-50:])
+    dataset = torch.utils.data.Subset(dataset, indices[:-500])
+    dataset_test = torch.utils.data.Subset(dataset_test, indices[-500:])
 
     # define training and validation data loaders
     data_loader = torch.utils.data.DataLoader(
-        dataset, batch_size=2, shuffle=True, num_workers=4,
+        dataset, batch_size=8, shuffle=True, num_workers=4,
         collate_fn=utils.collate_fn)
 
     data_loader_test = torch.utils.data.DataLoader(
-        dataset_test, batch_size=1, shuffle=False, num_workers=4,
+        dataset_test, batch_size=8, shuffle=False, num_workers=4,
         collate_fn=utils.collate_fn)
 
     # get the model using our helper function
@@ -52,4 +65,13 @@ def main():
         # evaluate on the test dataset
         evaluate(model, data_loader_test, device=device)
 
+    #保存训练好的模型
+    path='./Weights'
+    if not os.path.isdir(path):
+        os.mkdir(path)
+    torch.save(model.state_dict(),os.path.join(path,"mask_r_cnn.pt"))
+
     print("That's it!")
+
+if __name__=='__main__':
+    main()
