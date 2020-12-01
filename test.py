@@ -21,6 +21,7 @@ def get_transform(train):
     return T.Compose(transforms)
 
 
+
 # train on the GPU or on the CPU, if a GPU is not available
 device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
@@ -47,12 +48,12 @@ data_loader_test = torch.utils.data.DataLoader(
 
 # get the model using our helper function
 model = get_model_instance_segmentation(num_classes)
-model.load_state_dict(torch.load(os.path.join('./Weights',"mask_r_cnn.pt"),map_location=torch.device('cpu')))
+model.load_state_dict(torch.load(os.path.join('./Weights',"axial.pt"),map_location=torch.device('cpu')))
 # move model to the right device
 model.to(device)
 
 #example
-img,label=dataset_test[-2]
+img,label=dataset_test[-100]
 model.eval()
 with torch.no_grad():
     prediction=model([img.to(device)])
@@ -64,9 +65,14 @@ with torch.no_grad():
     for i in range(len(ims_np)):
         mask += ims_np[i] * (i + 1)  # 为了用不同的颜色显示出来
     mask = Image.fromarray(mask).convert('L')
+
     boxes_pre=prediction[0]['boxes']
     pres=np.zeros(prediction[0]['masks'].shape[1:])
+    print("类别数目:{}".format(len(prediction[0]["masks"])))
     for i in range(prediction[0]['masks'].shape[0]):
+        print(np.unique(np.array(np.ceil(prediction[0]['masks'][i, 0]),dtype='int16')))
+
+        #TODO:
         pres+=prediction[0]['masks'][i, 0].mul((i+1)*255//prediction[0]['masks'].shape[0]).byte().cpu().numpy()
     pre = Image.fromarray(pres[0])
     fig=plt.figure()

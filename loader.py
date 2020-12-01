@@ -11,12 +11,14 @@ class PennFudanDataset(object):
         # load all image files, sorting them to
         # ensure that they are aligned
         self.imgs = list(sorted(os.listdir(os.path.join(root, "PNGImages"))))
+        self.imgs.sort()
         self.masks = list(sorted(os.listdir(os.path.join(root, "PedMasks"))))
 
     def __getitem__(self, idx):
         # load images ad masks
         img_path = os.path.join(self.root, "PNGImages", self.imgs[idx])
         mask_path = os.path.join(self.root, "PedMasks", self.masks[idx])
+        print(img_path)
         img = Image.open(img_path).convert("RGB")
         # note that we haven't converted the mask to RGB,
         # because each color corresponds to a different instance
@@ -28,7 +30,6 @@ class PennFudanDataset(object):
         obj_ids = np.unique(mask)
         # first id is the background, so remove it
         obj_ids = obj_ids[1:]
-        print(obj_ids)
         # split the color-encoded mask into a set
         # of binary masks
         masks = mask == obj_ids[:, None, None]

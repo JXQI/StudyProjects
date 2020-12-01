@@ -5,6 +5,7 @@ import transforms as T
 from loader import PennFudanDataset
 from model import get_model_instance_segmentation
 import os
+from settings import MODEL_NAME,EPOCH,BATCH_SIZE,NUM_CLASS
 
 def get_transform(train):
     transforms = []
@@ -19,7 +20,7 @@ def main():
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
     # our dataset has two classes only - background and person
-    num_classes = 2
+    num_classes = NUM_CLASS
     # use our dataset and defined transformations
     dataset = PennFudanDataset('PennFudanPed', get_transform(train=True))
     dataset_test = PennFudanDataset('PennFudanPed', get_transform(train=False))
@@ -32,11 +33,11 @@ def main():
 
     # define training and validation data loaders
     data_loader = torch.utils.data.DataLoader(
-        dataset, batch_size=8, shuffle=True, num_workers=4,
+        dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=4,
         collate_fn=utils.collate_fn)
 
     data_loader_test = torch.utils.data.DataLoader(
-        dataset_test, batch_size=8, shuffle=False, num_workers=4,
+        dataset_test, batch_size=BATCH_SIZE, shuffle=False, num_workers=4,
         collate_fn=utils.collate_fn)
 
     # get the model using our helper function
@@ -55,7 +56,7 @@ def main():
                                                    gamma=0.1)
 
     # let's train it for 10 epochs
-    num_epochs = 10
+    num_epochs = EPOCH
 
     for epoch in range(num_epochs):
         # train for one epoch, printing every 10 iterations
@@ -69,7 +70,7 @@ def main():
     path='./Weights'
     if not os.path.isdir(path):
         os.mkdir(path)
-    torch.save(model.state_dict(),os.path.join(path,"mask_r_cnn.pt"))
+    torch.save(model.state_dict(),os.path.join(path,MODEL_NAME))
 
     print("That's it!")
 
