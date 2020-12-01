@@ -33,8 +33,8 @@ dataset_test = PennFudanDataset('PennFudanPed', get_transform(train=False))
 # split the dataset in train and test set
 #indices = torch.randperm(len(dataset)).tolist()
 indices=[i for i in range(len(dataset))]
-dataset = torch.utils.data.Subset(dataset, indices[:-50])
-dataset_test = torch.utils.data.Subset(dataset_test, indices[-50:])
+dataset = torch.utils.data.Subset(dataset, indices[:-500])
+dataset_test = torch.utils.data.Subset(dataset_test, indices[-500:])
 
 # define training and validation data loaders
 data_loader = torch.utils.data.DataLoader(
@@ -52,7 +52,7 @@ model.load_state_dict(torch.load(os.path.join('./Weights',"mask_r_cnn.pt"),map_l
 model.to(device)
 
 #example
-img,label=dataset_test[-1]
+img,label=dataset_test[-2]
 model.eval()
 with torch.no_grad():
     prediction=model([img.to(device)])
@@ -70,7 +70,7 @@ with torch.no_grad():
         pres+=prediction[0]['masks'][i, 0].mul((i+1)*255//prediction[0]['masks'].shape[0]).byte().cpu().numpy()
     pre = Image.fromarray(pres[0])
     fig=plt.figure()
-    ax=fig.add_subplot(1,3,1)
+    ax=fig.add_subplot(2,2,1)
     plt.title('image')
     for i in boxes:
         x0,y0,x1,y1=i
@@ -78,10 +78,20 @@ with torch.no_grad():
         rect=plt.Rectangle((x0,y0),abs(x1-x0),abs(y1-y0),edgecolor=color,fill=False,linewidth=1)
         ax.add_patch(rect)
     plt.imshow(image)
-    plt.subplot(1,3,2)
+    plt.subplot(2,2,2)
     plt.title('mask')
     plt.imshow(mask)
-    ax3=fig.add_subplot(1,3,3)
+    #显示预测的框在原图上的图像
+    ax2 = fig.add_subplot(2, 2, 3)
+    plt.title('image+pre_boxes')
+    for i in boxes_pre:
+        x0, y0, x1, y1 = i
+        color = (random(), random(), random())
+        rect = plt.Rectangle((x0, y0), abs(x1 - x0), abs(y1 - y0), edgecolor=color, fill=False, linewidth=1)
+        ax2.add_patch(rect)
+    plt.imshow(image)
+    #显示预测的mask
+    ax3=fig.add_subplot(2,2,4)
     plt.title('prection')
     for i in boxes_pre:
         x0,y0,x1,y1=i
