@@ -10,14 +10,14 @@ class PennFudanDataset(object):
         self.transforms = transforms
         # load all image files, sorting them to
         # ensure that they are aligned
-        self.imgs = list(sorted(os.listdir(os.path.join(root, "PNGImages"))))
+        self.imgs = list(sorted(os.listdir(os.path.join(root, "image"))))
         self.imgs.sort()
-        self.masks = list(sorted(os.listdir(os.path.join(root, "PedMasks"))))
+        self.masks = list(sorted(os.listdir(os.path.join(root, "mask"))))
 
     def __getitem__(self, idx):
         # load images ad masks
-        img_path = os.path.join(self.root, "PNGImages", self.imgs[idx])
-        mask_path = os.path.join(self.root, "PedMasks", self.masks[idx])
+        img_path = os.path.join(self.root, "image", self.imgs[idx])
+        mask_path = os.path.join(self.root, "mask", self.masks[idx])
         print(img_path)
         img = Image.open(img_path).convert("RGB")
         # note that we haven't converted the mask to RGB,

@@ -5,7 +5,7 @@ import transforms as T
 from loader import PennFudanDataset
 from model import get_model_instance_segmentation
 import os
-from settings import MODEL_NAME,EPOCH,BATCH_SIZE,NUM_CLASS
+from settings import MODEL_NAME,EPOCH,BATCH_SIZE,NUM_CLASS,IMAGE,LABEL
 
 def get_transform(train):
     transforms = []
@@ -22,8 +22,8 @@ def main():
     # our dataset has two classes only - background and person
     num_classes = NUM_CLASS
     # use our dataset and defined transformations
-    dataset = PennFudanDataset('PennFudanPed', get_transform(train=True))
-    dataset_test = PennFudanDataset('PennFudanPed', get_transform(train=False))
+    dataset = PennFudanDataset(IMAGE, get_transform(train=True))
+    dataset_test = PennFudanDataset(IMAGE, get_transform(train=False))
 
     print(len(dataset),len(dataset_test))
     # split the dataset in train and test set
