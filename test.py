@@ -12,7 +12,7 @@ import numpy as np
 import os
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 from random import random
-from settings import IMAGE,MODEL_NAME,AXIAL_MODEL,CORNAL_MODEL,ATTENTION,LOG,\
+from settings import IMAGE,MODEL_NAME,AXIAL_MODEL,CORNAL_MODEL,ATTENTION,LOG,DEBUG_LOG,\
     SAGIT_MODEL,AXIAL_TEST,CORNAL_TEST,SAGIT_TEST,NUM_CLASS,HU_LEVEL,HU_WINDOW,NII_GZ,NII_GZ_SAVE
 import SimpleITK as sitk
 from os.path import join
@@ -257,24 +257,28 @@ def inter_rec(boxes_pre):
     #将boxes根据x1的大小进行排序
     indice = boxes_pre[:, 0]
     boxes_pre_new = []
-    for _, box in sorted(zip(indice, boxes_pre)):
-        boxes_pre_new.append(np.array(box.cpu()))
-    boxes_pre_new = np.array(boxes_pre_new)
-    #x0,y0,x1,y1
-    i=0
-    boxes_pre_new=list(boxes_pre_new)
-    while(i<len(boxes_pre_new)-1):
-        x0,y0,x1,y1=boxes_pre_new[i]
-        m0,n0,m1,n1=boxes_pre_new[i+1]
+    try:
+        for _, box in sorted(zip(indice, boxes_pre),key=lambda x:(x[0],x[1][1])):
+            boxes_pre_new.append(np.array(box.cpu()))
+        boxes_pre_new = np.array(boxes_pre_new)
+        #x0,y0,x1,y1
+        i=0
+        boxes_pre_new=list(boxes_pre_new)
+        while(i<len(boxes_pre_new)-1):
+            x0,y0,x1,y1=boxes_pre_new[i]
+            m0,n0,m1,n1=boxes_pre_new[i+1]
 
-        if(m0<=x1 and ((n0>=y0 and n0<=y1) or (n1>=y0 and n0<=y1) or (n0<=y0 and n1>=y1))):
-            t0,z0=x0,min(y0,n0)
-            t1,z1=max(x1,m1),max(y1,n1)
-            box=[t0,z0,t1,z1]
-            boxes_pre_new[i+1]=np.array(box)
-            boxes_pre_new.pop(i)
-        else:
-            i=i+1
+            if(m0<=x1 and ((n0>=y0 and n0<=y1) or (n1>=y0 and n0<=y1) or (n0<=y0 and n1>=y1))):
+                t0,z0=x0,min(y0,n0)
+                t1,z1=max(x1,m1),max(y1,n1)
+                box=[t0,z0,t1,z1]
+                boxes_pre_new[i+1]=np.array(box)
+                boxes_pre_new.pop(i)
+            else:
+                i=i+1
+    except:
+        print(indice, boxes_pre)
+        if LOG or DEBUG_LOG:print("判断矩形相交部分出错！！！")
     return boxes_pre_new
 
 """
@@ -372,7 +376,7 @@ def Detect(model,data,indice):
             #     ax3.add_patch(rect)
             # plt.imshow(pre)
     except:
-        print("=======>sagit 或者 cornal 切片检测出错<==========")
+        if DEBUG_LOG:print("=======>sagit 或者 cornal 切片检测出错<==========")
 
     #判断是否正交，同时检测到,需要注意的是，显示的时候坐标x,y是反的
     #这里如果只判断中心过于严格，应该判断在一个区间内即可

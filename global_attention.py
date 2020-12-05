@@ -6,7 +6,7 @@ from settings import ATTENTION_LOG
 
 #全局变量
 QUENE=[]  #维护的队列
-N=3  #需要判别的上下层数目
+N_SLICES=3  #需要判别的上下层数目
 output,mask_output=[],[] #保存nii数据和mask数据
 
 """
@@ -45,8 +45,8 @@ def clear_quene(quene):
         boxes_pre=data["boxes_pre"]
         for item in boxes_pre:
             i,j=item[0],item[1]
-            if ATTENTION_LOG:print("相交的次数{}/{}".format(j,N))
-            if j>=N:  #当检测框相交次数超过N的时候才画框保留，否则不画框
+            if ATTENTION_LOG:print("相交的次数{}/{}".format(j,N_SLICES))
+            if j>=N_SLICES:  #当检测框相交次数超过N的时候才画框保留，否则不画框
                 x0, y0, x1, y1 = i
                 # 在原图上画矩形框并且保存
                 print("====>在原图上标记检测框:{}".format(i))
@@ -73,8 +73,8 @@ def attention(image_array,boxes_pre,number):
 
     if boxes_pre:  #是否检测到有交集的boxes，如果没有直接清空队列，直接返回
         # 将数据转化为队列的数据类型
-        number = [0] * len(boxes_pre)
-        data = {"nii_data": image_array, "boxes_pre": [list(i) for i in zip(boxes_pre, number)]}  #元组不能修改，这里需要转换成list
+        N = [0] * len(boxes_pre)
+        data = {"nii_data": image_array, "boxes_pre": [list(i) for i in zip(boxes_pre, N)]}  #元组不能修改，这里需要转换成list
         if ATTENTION_LOG:print("需要检测的boxes{}".format(boxes_pre))
         if QUENE:
             if ATTENTION_LOG:print("队列不为空{}".format(QUENE))
@@ -88,7 +88,7 @@ def attention(image_array,boxes_pre,number):
                         j[1]+=1     #相交的次数+1
                         status=True #有相交的boxes
                     else: #不相交判断当前box次数是否大于N,否则移除
-                        if j[1]<N:
+                        if j[1]<N_SLICES:
                             i["boxes_pre"].remove(j)
                         if ATTENTION_LOG:print("boxes判定结果不相交")
             # if status: #如果相交,改变一直接后边直接入队列即可
