@@ -45,7 +45,7 @@ def clear_quene(quene):
         boxes_pre=data["boxes_pre"]
         for item in boxes_pre:
             i,j=item[0],item[1]
-            print("相交的次数{}/{}".format(j,N))
+            if ATTENTION_LOG:print("相交的次数{}/{}".format(j,N))
             if j>=N:  #当检测框相交次数超过N的时候才画框保留，否则不画框
                 x0, y0, x1, y1 = i
                 # 在原图上画矩形框并且保存

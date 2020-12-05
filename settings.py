@@ -37,4 +37,4 @@ ATTENTION=True
 
 #判断日志打印(print)是否开启
 LOG=False
-ATTENTION_LOG=True
+ATTENTION_LOG=False

@@ -17,11 +17,12 @@ from settings import IMAGE,MODEL_NAME,AXIAL_MODEL,CORNAL_MODEL,ATTENTION,LOG,\
 import SimpleITK as sitk
 from os.path import join
 from PIL import ImageDraw
-from global_attention import attention,output,mask_output
+import global_attention as G
+from global_attention import attention
 #判断是否检测到
 EXIST=False
 OUTPUT,mask_OUTPUT=[],[] #保存nii数据和mask数据
-output,mask_output=output,mask_output
+
 
 #初始化全局变量
 device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
@@ -109,8 +110,8 @@ args: 输入一个完整的切片图像arry，输出同样形状，并且加了m
 """
 def prediction(nii_image):
     # 输出图像切片
-    global output
-    global mask_output
+    global OUTPUT
+    global mask_OUTPUT
     N = len(axial_dataset)
     if LOG:print("切片个数为：{}".format(N))
     # 需要判断第几个数据
@@ -138,14 +139,13 @@ def prediction(nii_image):
 
             if ATTENTION:  #如果存在相邻切片直接的判断，则进行判断，否则直接保存检测到的单个切片
                 attention(image_gray,boxes_pre,N)
+                nii_output, nii_mask_output = np.array(G.output), np.array(G.mask_output)  # global_attention中的全局变量
             else:
                 draw_save(boxes_pre,image_gray,N)
-    if ATTENTION:
-        nii_output,nii_mask_output=np.array(output), np.array(mask_output)   #global_attention中的全局变量
-        output,mask_output=[],[]
-    else:
-        nii_output, nii_mask_output=np.array(OUTPUT),np.array(mask_OUTPUT)   #本文件中的全局变量
-        OUTPUT,mask_OUTPUT=[],[]
+                nii_output, nii_mask_output = np.array(OUTPUT), np.array(mask_OUTPUT)  # 本文件中的全局变量
+    #清空判断下一个nii数据
+    G.output, G.mask_output = [], []
+    OUTPUT,mask_OUTPUT=[],[]
     return nii_output,nii_mask_output
     # #注释部分功能正常，实现保存和画框功能
     #         if boxes_pre:
@@ -406,11 +406,11 @@ def judge_cor_sig(box,indice):
     if str(sagit_coordinate[0]) in sagit_slices:
         sagit_contain=Detect(model=sagit_model,data=sagit_dataset[sagit_slices.index(str(sagit_coordinate[0]))],indice=sagit_coordinate)
     if coronal_contain and sagit_contain:
-        print("\n*********骨折坐标{}************\n".format((x,y,z)))
+        if LOG:print("\n*********骨折坐标{}************\n".format((x,y,z)))
         return True
     return False
 """
-function: 用来正交判断
+function: 用来正交判断在
 args: 输入一个axial的切片的位置
 """
 def decision(order):
@@ -603,5 +603,8 @@ if __name__=='__main__':
     for i in os.listdir(nii_path):
         print("\n\n{}\n\n".format(i))
         nii=join(nii_path,i)
+        #nii="/media/victoria/9c3e912e-22e1-476a-ad55-181dbde9d785/jinxiaoqiang/rifrac/ribfrac-val-images/RibFrac489-image.nii.gz"
         signal_nii(nii, nii_savepath)
+        print("\n\n\n\n处理完一个\n\n\n")
+        #break
     plt.show()
