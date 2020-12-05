@@ -98,7 +98,7 @@ def draw_save(boxes_pre,image_gray,N):
             #为mask着色
             mask_gray=np.array(mask_gray)
             mask_gray[int(x0):int(x1), int(y0):int(y1)] = boxes_pre.index(i) + 1
-    OUTPUT.append(np.array(image_gray))  # TODO:这个需要和break一起去掉
+    OUTPUT.append(np.array(image_gray))
     mask_OUTPUT.append(np.array(mask_gray))
     if LOG:print("\n====>已经检测的切片数目：{}/{}<====\n".format(len(OUTPUT),N))
     # output=np.array(OUTPUT)
@@ -127,8 +127,8 @@ def prediction(nii_image):
             #转化成灰度图最后保存
             image_gray = image.convert('L')
             #保存预测的mask
-            mask_gray = Image.new('L',image_gray.size,color=0)  #TODO:补充框和mask
-            boxes_pre = predict[0]['boxes']
+            mask_gray = Image.new('L',image_gray.size,color=0)
+            boxes_pre = predict[0]['boxes']     #TODO:考虑后边加不加mask，等到效果验证好了再决定
             # 合并重叠的区域
             boxes_pre = inter_rec(boxes_pre)
             # 计算boxes中心
@@ -182,7 +182,7 @@ def prediction(nii_image):
     #                 mask_gray=np.array(mask_gray)
     #                 mask_gray[int(x0):int(x1), int(y0):int(y1)] = boxes_pre.index(i) + 1
     #             plt.imshow(image)
-    #         output.append(np.array(image_gray))  # TODO:这个需要和break一起去掉
+    #         output.append(np.array(image_gray))
     #         mask_output.append(np.array(mask_gray))
     #         print("\n====>已经检测的切片数目：{}/{}<====\n".format(len(output),N))
     # output=np.array(output)
@@ -228,7 +228,6 @@ def signal_nii(nii,nii_savepath):
     pre_nii_mask.SetDirection(driection)
     pre_nii_mask.SetSpacing(space)
     pre_nii_mask.SetOrigin(origin)
-    #TODO:这里必须把mask和boxes保存在一个维度，加载到原图上去看
     sitk.WriteImage(pre_nii_file, join(nii_savepath, "image" , nii.split("/")[-1]))
     sitk.WriteImage(pre_nii_mask, join(nii_savepath, "mask" , nii.split("/")[-1]))
 
@@ -341,7 +340,6 @@ def Detect(model,data,indice):
             # print("类别数目:{}".format(len(prediction[0]["masks"])))
             # for i in range(prediction[0]['masks'].shape[0]):
             #     # print(np.unique(np.array(np.ceil(prediction[0]['masks'][i, 0]),dtype='int16')))
-            #     # TODO:
             #     pres += prediction[0]['masks'][i, 0].mul(
             #         (i + 1) * 255 // prediction[0]['masks'].shape[0]).byte().cpu().numpy()
             # pre = Image.fromarray(pres[0])
@@ -444,15 +442,12 @@ def decision(order):
         boxes_pre=[list(i) for i in boxes_pre if judge_cor_sig(i,index)]
         if LOG:print("\n正交判断的结果:/t{}\n".format(boxes_pre))
 
-        #TODO:这里需要添加相邻切片的关系，同时多次检测到才算检测到骨折部分
-
         if boxes_pre:
             EXIST=True
             pres = np.zeros(prediction[0]['masks'].shape[1:])
             #print("类别数目:{}".format(len(prediction[0]["masks"])))
             for i in range(prediction[0]['masks'].shape[0]):
                 # print(np.unique(np.array(np.ceil(prediction[0]['masks'][i, 0]),dtype='int16')))
-                # TODO:
                 pres += prediction[0]['masks'][i, 0].mul(
                     (i + 1) * 255 // prediction[0]['masks'].shape[0]).byte().cpu().numpy()
             pre = Image.fromarray(pres[0])
@@ -543,7 +538,6 @@ def evalutation(model_name,datapath):
         #print("类别数目:{}".format(len(prediction[0]["masks"])))
         for i in range(prediction[0]['masks'].shape[0]):
             #print(np.unique(np.array(np.ceil(prediction[0]['masks'][i, 0]),dtype='int16')))
-            #TODO:
             pres+=prediction[0]['masks'][i, 0].mul((i+1)*255//prediction[0]['masks'].shape[0]).byte().cpu().numpy()
         pre = Image.fromarray(pres[0])
         fig=plt.figure()
