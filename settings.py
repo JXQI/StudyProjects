@@ -31,3 +31,6 @@ HU_LEVEL=750
 
 #保存模型的名字
 MODEL_NAME='axial.pt'
+
+#是否开启连续层直接的判断
+ATTENTION=True

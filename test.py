@@ -12,14 +12,16 @@ import numpy as np
 import os
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 from random import random
-from settings import IMAGE,MODEL_NAME,AXIAL_MODEL,CORNAL_MODEL,\
+from settings import IMAGE,MODEL_NAME,AXIAL_MODEL,CORNAL_MODEL,ATTENTION,\
     SAGIT_MODEL,AXIAL_TEST,CORNAL_TEST,SAGIT_TEST,NUM_CLASS,HU_LEVEL,HU_WINDOW,NII_GZ,NII_GZ_SAVE
 import SimpleITK as sitk
 from os.path import join
 from PIL import ImageDraw
+from global_attention import attention
 
 #判断是否检测到
 EXIST=False
+OUTPUT,mask_OUTPUT=[],[] #保存nii数据和mask数据
 
 #初始化全局变量
 device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
@@ -74,6 +76,34 @@ def window_transform(ct_array, windowWidth, windowCenter, normal=False):
    return newimg
 
 """
+function:画框并且保存数据
+"""
+def draw_save(boxes_pre,image_gray,N):
+    global OUTPUT
+    global mask_OUTPUT
+    global EXIST
+
+    mask_gray = Image.new('L', size=image_gray.size, color=0)
+    if boxes_pre:
+        EXIST = True
+        for i in boxes_pre:
+            x0, y0, x1, y1 = i
+            # 在原图上画矩形框并且保存
+            print("====>在原图上标记检测框:{}".format(i))
+            draw = ImageDraw.Draw(image_gray)
+            draw.rectangle(i,fill=None,outline="black")
+            #在mask上画矩形框并且保存
+            print("====>在mask上标记检测框:{}".format(i))
+            #为mask着色
+            mask_gray=np.array(mask_gray)
+            mask_gray[int(x0):int(x1), int(y0):int(y1)] = boxes_pre.index(i) + 1
+    OUTPUT.append(np.array(image_gray))  # TODO:这个需要和break一起去掉
+    mask_OUTPUT.append(np.array(mask_gray))
+    print("\n====>已经检测的切片数目：{}/{}<====\n".format(len(OUTPUT),N))
+    output=np.array(OUTPUT)
+    mask_output=np.array(mask_OUTPUT)
+    print("输出图像的形状：{},mask的形状：{}".format(output.shape,mask_output.shape))
+"""
 function: 对多个nii切片做判断，并且加mask和boxes
 args: 输入一个完整的切片图像arry，输出同样形状，并且加了mask和boxes的图像arry
 """
@@ -104,48 +134,57 @@ def prediction(nii_image):
             print("axial截面检测到的boxes中心{}".format(boxes_center))
             boxes_pre = [i for i in boxes_pre if judge_cor_sig(i, index)]
             print("正交判断的结果：{}".format(boxes_pre))
-            if boxes_pre:
-                EXIST = True
 
-                # TODO:这里统计mask，需要和boxes对应
-                pres = np.zeros(predict[0]['masks'].shape[1:])
-                # print("类别数目:{}".format(len(prediction[0]["masks"])))
-                for i in range(predict[0]['masks'].shape[0]):
-                    # print(np.unique(np.array(np.ceil(prediction[0]['masks'][i, 0]),dtype='int16')))
-                    # TODO:保存mask
-                    pres += predict[0]['masks'][i, 0].mul(
-                        (i + 1) * 255 // predict[0]['masks'].shape[0]).byte().cpu().numpy()
-                pre = Image.fromarray(pres[0])
-                fig = plt.figure()
-                ax1 = fig.add_subplot(2, 2, 1)
-                plt.title('slice_image')
-                plt.imshow(image)
-                ax2 = fig.add_subplot(2, 2, 2)
-                plt.title('mask')
-                plt.imshow(pre)
-                ax3 = fig.add_subplot(2, 2, 3)
-                for i in boxes_pre:
-                    x0, y0, x1, y1 = i
-                    color = (random(), random(), random())
-                    rect = plt.Rectangle((x0, y0), abs(x1 - x0), abs(y1 - y0), edgecolor=color, fill=False, linewidth=1)
-                    ax3.add_patch(rect)
-                    # 在原图上画矩形框并且保存
-                    print("====>在原图上标记检测框:{}".format(i))
-                    draw = ImageDraw.Draw(image_gray)
-                    draw.rectangle(i,fill=None,outline="black")
-                    #在mask上画矩形框并且保存
-                    print("====>在mask上标记检测框:{}".format(i))
-                    #为mask着色
-                    mask_gray=np.array(mask_gray)
-                    mask_gray[int(x0):int(x1), int(y0):int(y1)] = boxes_pre.index(i) + 1
-                plt.imshow(image)
-            output.append(np.array(image_gray))  # TODO:这个需要和break一起去掉
-            mask_output.append(np.array(mask_gray))
-            print("\n====>已经检测的切片数目：{}/{}<====\n".format(len(output),N))
-    output=np.array(output)
-    mask_output=np.array(mask_output)
-    print("输入图像的形状：{},输出图像的形状：{},mask的形状：{}".format(nii_image.shape, output.shape,mask_output.shape))
-    return output,mask_output
+            if ATTENTION:  #如果存在相邻切片直接的判断，则进行判断，否则直接保存检测到的单个切片
+                attention(image_gray,boxes_pre)
+            else:
+                draw_save(boxes_pre,image_gray,N)
+    if ATTENTION:
+        return output,mask_output   #global_attention中的全局变量
+    else:
+        return OUTPUT,mask_OUTPUT   #本文件中的全局变量
+    # #注释部分功能正常，实现保存和画框功能
+    #         if boxes_pre:
+    #             EXIST = True
+    #
+    #             # TODO:这里是在plt中的显示函数，没有其他作用
+    #             pres = np.zeros(predict[0]['masks'].shape[1:])
+    #             # print("类别数目:{}".format(len(prediction[0]["masks"])))
+    #             for i in range(predict[0]['masks'].shape[0]):
+    #                 # print(np.unique(np.array(np.ceil(prediction[0]['masks'][i, 0]),dtype='int16')))
+    #                 pres += predict[0]['masks'][i, 0].mul(
+    #                     (i + 1) * 255 // predict[0]['masks'].shape[0]).byte().cpu().numpy()
+    #             pre = Image.fromarray(pres[0])
+    #             fig = plt.figure()
+    #             ax1 = fig.add_subplot(2, 2, 1)
+    #             plt.title('slice_image')
+    #             plt.imshow(image)
+    #             ax2 = fig.add_subplot(2, 2, 2)
+    #             plt.title('mask')
+    #             plt.imshow(pre)
+    #             ax3 = fig.add_subplot(2, 2, 3)
+    #             for i in boxes_pre:
+    #                 x0, y0, x1, y1 = i
+    #                 # color = (random(), random(), random())
+    #                 # rect = plt.Rectangle((x0, y0), abs(x1 - x0), abs(y1 - y0), edgecolor=color, fill=False, linewidth=1)
+    #                 # ax3.add_patch(rect)
+    #                 # 在原图上画矩形框并且保存
+    #                 print("====>在原图上标记检测框:{}".format(i))
+    #                 draw = ImageDraw.Draw(image_gray)
+    #                 draw.rectangle(i,fill=None,outline="black")
+    #                 #在mask上画矩形框并且保存
+    #                 print("====>在mask上标记检测框:{}".format(i))
+    #                 #为mask着色
+    #                 mask_gray=np.array(mask_gray)
+    #                 mask_gray[int(x0):int(x1), int(y0):int(y1)] = boxes_pre.index(i) + 1
+    #             plt.imshow(image)
+    #         output.append(np.array(image_gray))  # TODO:这个需要和break一起去掉
+    #         mask_output.append(np.array(mask_gray))
+    #         print("\n====>已经检测的切片数目：{}/{}<====\n".format(len(output),N))
+    # output=np.array(output)
+    # mask_output=np.array(mask_output)
+    # print("输入图像的形状：{},输出图像的形状：{},mask的形状：{}".format(nii_image.shape, output.shape,mask_output.shape))
+    # return output,mask_output
 
 """
 function: 用于单个截面处理单个nii.gz的文件，并且最后预测并且保存成nii.gz格式的文件
@@ -395,6 +434,9 @@ def decision(order):
         print("====>axial截面检测到的boxes中心:/t{}".format(boxes_center))
         boxes_pre=[list(i) for i in boxes_pre if judge_cor_sig(i,index)]
         print("\n正交判断的结果:/t{}\n".format(boxes_pre))
+
+        #TODO:这里需要添加相邻切片的关系，同时多次检测到才算检测到骨折部分
+
         if boxes_pre:
             EXIST=True
             pres = np.zeros(prediction[0]['masks'].shape[1:])
