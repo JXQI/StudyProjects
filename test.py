@@ -214,7 +214,7 @@ def inter_rec(boxes_pre):
     indice = boxes_pre[:, 0]
     boxes_pre_new = []
     for _, box in sorted(zip(indice, boxes_pre)):
-        boxes_pre_new.append(np.array(box))
+        boxes_pre_new.append(np.array(box.cpu()))
     boxes_pre_new = np.array(boxes_pre_new)
     #x0,y0,x1,y1
     i=0
@@ -227,7 +227,7 @@ def inter_rec(boxes_pre):
             t0,z0=x0,min(y0,n0)
             t1,z1=max(x1,m1),max(y1,n1)
             box=[t0,z0,t1,z1]
-            boxes_pre_new[i+1]=box
+            boxes_pre_new[i+1]=np.array(box)
             boxes_pre_new.pop(i)
         else:
             i=i+1
@@ -393,7 +393,7 @@ def decision(order):
         #判断三个正交的截面
         boxes_center = [box_center(i) for i in boxes_pre]
         print("====>axial截面检测到的boxes中心:/t{}".format(boxes_center))
-        boxes_pre=[i for i in boxes_pre if judge_cor_sig(i,index)]
+        boxes_pre=[list(i) for i in boxes_pre if judge_cor_sig(i,index)]
         print("\n正交判断的结果:/t{}\n".format(boxes_pre))
         if boxes_pre:
             EXIST=True
