@@ -17,11 +17,11 @@ from settings import IMAGE,MODEL_NAME,AXIAL_MODEL,CORNAL_MODEL,ATTENTION,LOG,\
 import SimpleITK as sitk
 from os.path import join
 from PIL import ImageDraw
-from global_attention import attention
-
+from global_attention import attention,output,mask_output
 #判断是否检测到
 EXIST=False
 OUTPUT,mask_OUTPUT=[],[] #保存nii数据和mask数据
+output,mask_output=output,mask_output
 
 #初始化全局变量
 device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
@@ -100,16 +100,17 @@ def draw_save(boxes_pre,image_gray,N):
     OUTPUT.append(np.array(image_gray))  # TODO:这个需要和break一起去掉
     mask_OUTPUT.append(np.array(mask_gray))
     if LOG:print("\n====>已经检测的切片数目：{}/{}<====\n".format(len(OUTPUT),N))
-    output=np.array(OUTPUT)
-    mask_output=np.array(mask_OUTPUT)
-    if LOG:print("输出图像的形状：{},mask的形状：{}".format(output.shape,mask_output.shape))
+    # output=np.array(OUTPUT)
+    # mask_output=np.array(mask_OUTPUT)
+    # if LOG:print("输出图像的形状：{},mask的形状：{}".format(output.shape,mask_output.shape))
 """
 function: 对多个nii切片做判断，并且加mask和boxes
 args: 输入一个完整的切片图像arry，输出同样形状，并且加了mask和boxes的图像arry
 """
 def prediction(nii_image):
     # 输出图像切片
-    output,mask_output=[],[]
+    global output
+    global mask_output
     N = len(axial_dataset)
     if LOG:print("切片个数为：{}".format(N))
     # 需要判断第几个数据
@@ -132,17 +133,20 @@ def prediction(nii_image):
             # 计算boxes中心
             boxes_center = [box_center(i) for i in boxes_pre]
             if LOG:print("axial截面检测到的boxes中心{}".format(boxes_center))
-            boxes_pre = [i for i in boxes_pre if judge_cor_sig(i, index)]
+            boxes_pre = [list(i) for i in boxes_pre if judge_cor_sig(i, index)]
             if LOG:print("正交判断的结果：{}".format(boxes_pre))
 
             if ATTENTION:  #如果存在相邻切片直接的判断，则进行判断，否则直接保存检测到的单个切片
-                attention(image_gray,boxes_pre)
+                attention(image_gray,boxes_pre,N)
             else:
                 draw_save(boxes_pre,image_gray,N)
     if ATTENTION:
-        return output,mask_output   #global_attention中的全局变量
+        nii_output,nii_mask_output=np.array(output), np.array(mask_output)   #global_attention中的全局变量
+        output,mask_output=[],[]
     else:
-        return OUTPUT,mask_OUTPUT   #本文件中的全局变量
+        nii_output, nii_mask_output=np.array(OUTPUT),np.array(mask_OUTPUT)   #本文件中的全局变量
+        OUTPUT,mask_OUTPUT=[],[]
+    return nii_output,nii_mask_output
     # #注释部分功能正常，实现保存和画框功能
     #         if boxes_pre:
     #             EXIST = True
@@ -213,6 +217,7 @@ def signal_nii(nii,nii_savepath):
 
     #返回原图上带有boxes和mask的切片
     pre_data,pre_mask=prediction(nii_image)
+    print(pre_data.shape,pre_mask.shape)
     pre_nii_file=sitk.GetImageFromArray(pre_data)
     pre_nii_mask=sitk.GetImageFromArray(pre_mask)
     #必须设置方向，不然和原图像在ITK中打开对不齐
@@ -279,14 +284,14 @@ def Init(label=True):
     global axial_dataset,cornal_dataset,sagit_dataset
     global axial_model,cornal_model,sagit_model
     global axial_slices,cornal_slices,sagit_slices
-    #初始化dataloder
-    axial_dataset=PennFudanDataset(AXIAL_TEST, get_transform(train=False))
-    cornal_dataset=PennFudanDataset(CORNAL_TEST, get_transform(train=False))
-    sagit_dataset=PennFudanDataset(SAGIT_TEST, get_transform(train=False))
-
-    axial_slices = axial_dataset.imgs_slices
-    cornal_slices = cornal_dataset.imgs_slices
-    sagit_slices = sagit_dataset.imgs_slices
+    # #初始化dataloder
+    # axial_dataset=PennFudanDataset(AXIAL_TEST, get_transform(train=False))
+    # cornal_dataset=PennFudanDataset(CORNAL_TEST, get_transform(train=False))
+    # sagit_dataset=PennFudanDataset(SAGIT_TEST, get_transform(train=False))
+    #
+    # axial_slices = axial_dataset.imgs_slices
+    # cornal_slices = cornal_dataset.imgs_slices
+    # sagit_slices = sagit_dataset.imgs_slices
     #初始化模型
     num_classes = NUM_CLASS
     axial_model = get_model_instance_segmentation(num_classes)

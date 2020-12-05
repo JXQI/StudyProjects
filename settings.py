@@ -21,7 +21,7 @@ CORNAL_TEST="/Users/jinxiaoqiang/jinxiaoqiang/ModelsGenesis/pytorch/coronal_test
 SAGIT_TEST="/Users/jinxiaoqiang/jinxiaoqiang/ModelsGenesis/pytorch/sagital_test_slice"
 
 #测试集路径
-NII_GZ="/Users/jinxiaoqiang/jinxiaoqiang/数据集/Bone/ribfrac/ribfrac-val-images/"
+NII_GZ="/media/victoria/9c3e912e-22e1-476a-ad55-181dbde9d785/jinxiaoqiang/rifrac/ribfrac-val-images/"
 #生成的结果保存路径
 NII_GZ_SAVE="./nii_test"
 
@@ -37,3 +37,4 @@ ATTENTION=True
 
 #判断日志打印(print)是否开启
 LOG=False
+ATTENTION_LOG=True
