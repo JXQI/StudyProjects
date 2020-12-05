@@ -34,3 +34,6 @@ MODEL_NAME='axial.pt'
 
 #是否开启连续层直接的判断
 ATTENTION=True
+
+#判断日志打印(print)是否开启
+LOG=False

@@ -12,7 +12,7 @@ import numpy as np
 import os
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 from random import random
-from settings import IMAGE,MODEL_NAME,AXIAL_MODEL,CORNAL_MODEL,ATTENTION,\
+from settings import IMAGE,MODEL_NAME,AXIAL_MODEL,CORNAL_MODEL,ATTENTION,LOG,\
     SAGIT_MODEL,AXIAL_TEST,CORNAL_TEST,SAGIT_TEST,NUM_CLASS,HU_LEVEL,HU_WINDOW,NII_GZ,NII_GZ_SAVE
 import SimpleITK as sitk
 from os.path import join
@@ -89,20 +89,20 @@ def draw_save(boxes_pre,image_gray,N):
         for i in boxes_pre:
             x0, y0, x1, y1 = i
             # 在原图上画矩形框并且保存
-            print("====>在原图上标记检测框:{}".format(i))
+            if LOG:print("====>在原图上标记检测框:{}".format(i))
             draw = ImageDraw.Draw(image_gray)
             draw.rectangle(i,fill=None,outline="black")
             #在mask上画矩形框并且保存
-            print("====>在mask上标记检测框:{}".format(i))
+            if LOG:print("====>在mask上标记检测框:{}".format(i))
             #为mask着色
             mask_gray=np.array(mask_gray)
             mask_gray[int(x0):int(x1), int(y0):int(y1)] = boxes_pre.index(i) + 1
     OUTPUT.append(np.array(image_gray))  # TODO:这个需要和break一起去掉
     mask_OUTPUT.append(np.array(mask_gray))
-    print("\n====>已经检测的切片数目：{}/{}<====\n".format(len(OUTPUT),N))
+    if LOG:print("\n====>已经检测的切片数目：{}/{}<====\n".format(len(OUTPUT),N))
     output=np.array(OUTPUT)
     mask_output=np.array(mask_OUTPUT)
-    print("输出图像的形状：{},mask的形状：{}".format(output.shape,mask_output.shape))
+    if LOG:print("输出图像的形状：{},mask的形状：{}".format(output.shape,mask_output.shape))
 """
 function: 对多个nii切片做判断，并且加mask和boxes
 args: 输入一个完整的切片图像arry，输出同样形状，并且加了mask和boxes的图像arry
@@ -111,9 +111,9 @@ def prediction(nii_image):
     # 输出图像切片
     output,mask_output=[],[]
     N = len(axial_dataset)
-    print("切片个数为：{}".format(N))
+    if LOG:print("切片个数为：{}".format(N))
     # 需要判断第几个数据
-    for order in range(142,144):  #TODO:修改大小快速测试程序
+    for order in range(N):  #TODO:修改大小快速测试程序
         global EXIST
         EXIST = False
         img,label,index = axial_dataset[order]
@@ -131,9 +131,9 @@ def prediction(nii_image):
             boxes_pre = inter_rec(boxes_pre)
             # 计算boxes中心
             boxes_center = [box_center(i) for i in boxes_pre]
-            print("axial截面检测到的boxes中心{}".format(boxes_center))
+            if LOG:print("axial截面检测到的boxes中心{}".format(boxes_center))
             boxes_pre = [i for i in boxes_pre if judge_cor_sig(i, index)]
-            print("正交判断的结果：{}".format(boxes_pre))
+            if LOG:print("正交判断的结果：{}".format(boxes_pre))
 
             if ATTENTION:  #如果存在相邻切片直接的判断，则进行判断，否则直接保存检测到的单个切片
                 attention(image_gray,boxes_pre)
@@ -314,7 +314,7 @@ def Detect(model,data,indice):
             boxes_pre = prediction[0]['boxes']
             # 合并重叠的区域
             boxes_pre = inter_rec(boxes_pre)
-            print("====>非axial截面检测到的区域{}".format(boxes_pre))
+            if LOG:print("====>非axial截面检测到的区域{}".format(boxes_pre))
             # 求标注框的中心
             box_centers = [box_center(i) for i in boxes_pre]
 
@@ -374,9 +374,9 @@ def Detect(model,data,indice):
     #if((indice[2],indice[1]) in box_centers):
     #判断中心坐标是否在box中
     for box in boxes_pre:
-        print("====>判断范围{}----------{}".format((indice[2],indice[1]),box))
+        if LOG:print("====>判断范围{}----------{}".format((indice[2],indice[1]),box))
         if (indice[2]>=box[0] and indice[2]<=box[2]) and (indice[1]>=box[1] and indice[1]<=box[3]):
-            print("*********匹配成功：{}---{}***********".format(indice,box))
+            if LOG:print("*********匹配成功：{}---{}***********".format(indice,box))
             return True
     else:
         return False
@@ -388,7 +388,7 @@ def judge_cor_sig(box,indice):
     x=int(abs(box[0]-box[2])//2+box[0])
     y=int(abs(box[1]-box[3])//2+box[1])
     z=int(indice)
-    print(x,y,z)
+    if LOG:print(x,y,z)
     #这里获得另外截面的坐标,cor (1,2,0)
     coronal_coordinate=(y,x,z)
     sagit_coordinate=(x,y,z)
@@ -431,9 +431,9 @@ def decision(order):
         #     print(box_center(i))
         #判断三个正交的截面
         boxes_center = [box_center(i) for i in boxes_pre]
-        print("====>axial截面检测到的boxes中心:/t{}".format(boxes_center))
+        if LOG:print("====>axial截面检测到的boxes中心:/t{}".format(boxes_center))
         boxes_pre=[list(i) for i in boxes_pre if judge_cor_sig(i,index)]
-        print("\n正交判断的结果:/t{}\n".format(boxes_pre))
+        if LOG:print("\n正交判断的结果:/t{}\n".format(boxes_pre))
 
         #TODO:这里需要添加相邻切片的关系，同时多次检测到才算检测到骨折部分
 
@@ -599,5 +599,4 @@ if __name__=='__main__':
         print("\n\n{}\n\n".format(i))
         nii=join(nii_path,i)
         signal_nii(nii, nii_savepath)
-        break
     plt.show()
