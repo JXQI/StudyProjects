@@ -265,19 +265,25 @@ def inter_rec(boxes_pre):
         boxes_pre_new=list(boxes_pre_new)
         while(i<len(boxes_pre_new)-1):
             x0,y0,x1,y1=boxes_pre_new[i]
-            m0,n0,m1,n1=boxes_pre_new[i+1]
 
-            if(m0<=x1 and ((n0>=y0 and n0<=y1) or (n1>=y0 and n0<=y1) or (n0<=y0 and n1>=y1))):
-                t0,z0=x0,min(y0,n0)
-                t1,z1=max(x1,m1),max(y1,n1)
-                box=[t0,z0,t1,z1]
-                boxes_pre_new[i+1]=np.array(box)
-                boxes_pre_new.pop(i)
-            else:
+            j=i+1 #从当前位置的下一个元素开始判断
+            Flag=False #是否有重合的boxes
+            while(j<len(boxes_pre_new)):
+                m0, n0, m1, n1 = boxes_pre_new[j]
+                if not (m0>x1 or n0>y1 or n1<y0):
+                    t0,z0=x0,min(y0,n0)
+                    t1,z1=max(x1,m1),max(y1,n1)
+                    box=[t0,z0,t1,z1]
+                    boxes_pre_new[i]=np.array(box)  #因为box是最小包含矩形框，所以这里将i位置的替换，而将j位置的去掉，这样可以维持原来boxes的顺序
+                    boxes_pre_new.pop(j)
+                    Flag=True
+                    break
+                else:
+                    j+=1
+            if not Flag:
                 i=i+1
     except:
-        print(indice, boxes_pre)
-        if LOG or DEBUG_LOG:print("判断矩形相交部分出错！！！")
+        print("判断矩形相交部分出错！！！")
     return boxes_pre_new
 
 """
