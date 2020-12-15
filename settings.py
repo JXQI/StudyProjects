@@ -6,7 +6,7 @@
 GPU=False
 EPOCH=5
 BATCH_SIZE=8
-NUM_CLASS=2
+NUM_CLASS=1+4
 
 #数据集路径
 IMAGE="/Users/jinxiaoqiang/jinxiaoqiang/ModelsGenesis/pytorch/axial_test_slice"

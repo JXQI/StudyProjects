@@ -294,13 +294,13 @@ def Init(label=True):
     global axial_model,cornal_model,sagit_model
     global axial_slices,cornal_slices,sagit_slices
     # #初始化dataloder
-    # axial_dataset=PennFudanDataset(AXIAL_TEST, get_transform(train=False))
-    # cornal_dataset=PennFudanDataset(CORNAL_TEST, get_transform(train=False))
-    # sagit_dataset=PennFudanDataset(SAGIT_TEST, get_transform(train=False))
-    #
-    # axial_slices = axial_dataset.imgs_slices
-    # cornal_slices = cornal_dataset.imgs_slices
-    # sagit_slices = sagit_dataset.imgs_slices
+    axial_dataset=PennFudanDataset(AXIAL_TEST, get_transform(train=False))
+    cornal_dataset=PennFudanDataset(CORNAL_TEST, get_transform(train=False))
+    sagit_dataset=PennFudanDataset(SAGIT_TEST, get_transform(train=False))
+
+    axial_slices = axial_dataset.imgs_slices
+    cornal_slices = cornal_dataset.imgs_slices
+    sagit_slices = sagit_dataset.imgs_slices
     #初始化模型
     num_classes = NUM_CLASS
     axial_model = get_model_instance_segmentation(num_classes)
@@ -579,12 +579,12 @@ def evalutation(model_name,datapath):
         #plt.show()
 
 if __name__=='__main__':
-    # #评估单个切片
-    # evalutation("axial.pt","/Users/jinxiaoqiang/jinxiaoqiang/ModelsGenesis/pytorch/axial_test_slice")
+    #评估单个切片
+    evalutation("axial.pt","/Users/jinxiaoqiang/jinxiaoqiang/ModelsGenesis/pytorch/axial_test_slice")
     # evalutation("sagit.pt","/Users/jinxiaoqiang/jinxiaoqiang/ModelsGenesis/pytorch/sagital_test_slice")
     # evalutation("cornal.pt","/Users/jinxiaoqiang/jinxiaoqiang/ModelsGenesis/pytorch/coronal_test_slice")
 
-    # #评估存在label的数据，正交判断
+    #评估存在label的数据，正交判断
     # Init()
     # N=len(axial_dataset)
     # print("切片个数为：{}".format(N))
@@ -598,17 +598,17 @@ if __name__=='__main__':
     #         print("第{}张没有检测到骨折部分".format(order+1))
 
     # 判断单个nii.gz文件，并且生成加mask的nii.gz文件
-    Init()
-    nii_path=NII_GZ
-    nii_savepath=NII_GZ_SAVE
-    if not os.path.isdir(nii_savepath):
-        os.makedirs(join(nii_savepath,'image'))
-        os.makedirs(join(nii_savepath,'mask'))
-    for i in os.listdir(nii_path):
-        print("\n\n{}\n\n".format(i))
-        nii=join(nii_path,i)
-        #nii="/media/victoria/9c3e912e-22e1-476a-ad55-181dbde9d785/jinxiaoqiang/rifrac/ribfrac-val-images/RibFrac489-image.nii.gz"
-        signal_nii(nii, nii_savepath)
-        print("\n\n\n\n处理完一个\n\n\n")
-        #break
-    plt.show()
+    # Init()
+    # nii_path=NII_GZ
+    # nii_savepath=NII_GZ_SAVE
+    # if not os.path.isdir(nii_savepath):
+    #     os.makedirs(join(nii_savepath,'image'))
+    #     os.makedirs(join(nii_savepath,'mask'))
+    # for i in os.listdir(nii_path):
+    #     print("\n\n{}\n\n".format(i))
+    #     nii=join(nii_path,i)
+    #     #nii="/media/victoria/9c3e912e-22e1-476a-ad55-181dbde9d785/jinxiaoqiang/rifrac/ribfrac-val-images/RibFrac489-image.nii.gz"
+    #     signal_nii(nii, nii_savepath)
+    #     print("\n\n\n\n处理完一个\n\n\n")
+    #     #break
+    # plt.show()
