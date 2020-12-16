@@ -5,7 +5,7 @@ import transforms as T
 from loader import PennFudanDataset
 from model import get_model_instance_segmentation
 import os
-from settings import MODEL_NAME,EPOCH,BATCH_SIZE,NUM_CLASS,IMAGE,LABEL
+from settings import MODEL_NAME,EPOCH,BATCH_SIZE,NUM_CLASS,IMAGE
 
 def get_transform(train):
     transforms = []
