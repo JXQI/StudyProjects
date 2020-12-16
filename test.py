@@ -496,7 +496,8 @@ def evalutation(model_name,datapath):
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
     # our dataset has two classes only - background and person
-    num_classes = 2
+    num_classes = 1+4
+
     # use our dataset and defined transformations
     dataset = PennFudanDataset(datapath, get_transform(train=True))
     dataset_test = PennFudanDataset(datapath, get_transform(train=False))
