@@ -7,6 +7,7 @@ from skimage.measure import label, regionprops
 import pandas as pd
 import os
 from tqdm import tqdm
+from settings import NII_GA_PRE,NII_GZ
 '''
 function: 生成csv文件
 '''
@@ -28,9 +29,11 @@ def _make_submission_files(pred, image_id, affine):
     return pred_image, pred_info
 
 if __name__=='__main__':
-    path="/Users/jinxiaoqiang/jinxiaoqiang/数据集/Bone/nii_test_2/mask"
-    pred_dir="/Users/jinxiaoqiang/jinxiaoqiang/数据集/Bone/nii_test_2/mask"
+    path=NII_GZ #生成的mask对象路径
+    pred_dir=NII_GA_PRE #将要保存的预测对象
 
+    if not os.path.isdir(pred_dir):
+        os.makedirs(pred_dir)
     image_path_list = sorted([os.path.join(path, file) for file in os.listdir(path) if "nii" in file])
     image_id_list = [os.path.basename(path).split("-")[0] for path in image_path_list]
     progress = tqdm(total=len(image_id_list))
@@ -42,6 +45,9 @@ if __name__=='__main__':
 
         pred_image,pred_info=_make_submission_files(image_arr,image_id,image_affine)
         pred_info_list.append(pred_info)
+        pred_path = os.path.join(pred_dir, f"{image_id}_pred.nii.gz")
+        nib.save(pred_image, pred_path)
+
         progress.update()
     pred_info = pd.concat(pred_info_list, ignore_index=True)
     pred_info.to_csv(os.path.join(pred_dir, "pred_info.csv"),index=False)
