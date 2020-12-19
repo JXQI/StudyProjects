@@ -9,7 +9,7 @@ BATCH_SIZE=8
 NUM_CLASS=1+4
 
 #数据集路径
-IMAGE="/media/victoria/9c3e912e-22e1-476a-ad55-181dbde9d785/jinxiaoqiang/rifrac/axial"
+IMAGE="/media/victoria/9c3e912e-22e1-476a-ad55-181dbde9d785/jinxiaoqiang/axial_slice"
 
 #保存的模型路径
 AXIAL_MODEL="./Weights/axial.pt"

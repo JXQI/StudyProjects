@@ -3,7 +3,7 @@ from engine import train_one_epoch, evaluate
 import utils
 import torch
 import transforms as T
-from loader import PennFudanDataset
+from loader import PennFudanDataset,PennFudanDataset_train
 from model import get_model_instance_segmentation
 import os
 from PIL import Image
@@ -497,10 +497,12 @@ def evalutation(model_name,datapath):
 
     # our dataset has two classes only - background and person
     num_classes = 1+5
-
+    # 定义color map，每个类别用相同颜色的框
+    # COLOR_MAP=[(0,0,255),(0,255,0),(255,0,0),(255,0,255),(0,255,255)]
+    COLOR_MAP = [(0, 0, 1), (0, 1, 0), (1, 0, 0), (1, 0, 1), (0, 1, 1)]
     # use our dataset and defined transformations
-    dataset = PennFudanDataset(datapath, get_transform(train=True))
-    dataset_test = PennFudanDataset(datapath, get_transform(train=False))
+    dataset = PennFudanDataset_train(datapath, get_transform(train=True))
+    dataset_test = PennFudanDataset_train(datapath, get_transform(train=False))
 
     # split the dataset in train and test set
     #indices = torch.randperm(len(dataset)).tolist()
@@ -524,35 +526,49 @@ def evalutation(model_name,datapath):
     model.to(device)
 
     #example
-    img,label=dataset_test[2]
+    img,label=dataset_test[-666]
     model.eval()
     with torch.no_grad():
         prediction=model([img.to(device)])
         image=Image.fromarray(img.mul(255).permute(1,2,0).byte().numpy())
+        # print(prediction)
         #显示gd
         boxes=list(np.array(label['boxes']))        #增加边框显示
+        label_g=np.array(label['labels'])
         ims_np = np.array(label['masks'], dtype="uint16")
         mask = np.zeros(ims_np[0].shape)
         for i in range(len(ims_np)):
-            mask += ims_np[i] * (i + 1)  # 为了用不同的颜色显示出来
+            signal_mask=ims_np[i]
+            signal_mask[signal_mask==1]=label_g[i]
+            mask+=signal_mask
         mask = Image.fromarray(mask).convert('L')
 
+        #预测结果
         boxes_pre=prediction[0]['boxes']
-
+        scores_pre = prediction[0]['scores']
+        labels_pre=prediction[0]['labels']
+        print(scores_pre)
         #合并重叠的区域
-        boxes_pre=inter_rec(boxes_pre)
+        # boxes_pre=inter_rec(boxes_pre)
         pres=np.zeros(prediction[0]['masks'].shape[1:])
         #print("类别数目:{}".format(len(prediction[0]["masks"])))
         for i in range(prediction[0]['masks'].shape[0]):
-            #print(np.unique(np.array(np.ceil(prediction[0]['masks'][i, 0]),dtype='int16')))
-            pres+=prediction[0]['masks'][i, 0].mul((i+1)*255//prediction[0]['masks'].shape[0]).byte().cpu().numpy()
-        pre = Image.fromarray(pres[0])
+            # 只考虑得分高于0.5的，否则视作是背景
+            if scores_pre[i] > 0.5:
+                # 获得一个mask,转换为np类型
+                pre_mask=prediction[0]['masks'][i, 0].cpu().numpy()
+                #对mask加阈值，并且二值化，并且mask的值代表类别信息
+                pre_mask[pre_mask>=0.5]=int(labels_pre[i])
+                pre_mask[pre_mask<0.5]=0
+                #将同一个mask中所有出现的部分累加起来
+                pres+=pre_mask
+        pre = Image.fromarray(pres[0]).convert('L')
         fig=plt.figure()
         ax=fig.add_subplot(2,2,1)
         plt.title('image')
-        for i in boxes:
-            x0,y0,x1,y1=i
-            color=(random(),random(),random())
+        for i in range(len(boxes)):
+            x0,y0,x1,y1=boxes[i]
+            color=COLOR_MAP[label_g[i]]
             rect=plt.Rectangle((x0,y0),abs(x1-x0),abs(y1-y0),edgecolor=color,fill=False,linewidth=1)
             ax.add_patch(rect)
         plt.imshow(image)
@@ -563,12 +579,19 @@ def evalutation(model_name,datapath):
         ax2 = fig.add_subplot(2, 2, 3)
         plt.title('image+pre_boxes')
         rects=[]
-        for i in boxes_pre:
-            x0, y0, x1, y1 = i
-            color = (random(), random(), random())
-            rect = plt.Rectangle((x0, y0), abs(x1 - x0), abs(y1 - y0), edgecolor=color, fill=False, linewidth=1)
-            rects.append([(x0, y0), abs(x1 - x0), abs(y1 - y0), color, False, 1])
-            ax2.add_patch(rect)
+        # for i in boxes_pre:
+        #     x0, y0, x1, y1 = i
+        #     color = (random(), random(), random())
+        #     rect = plt.Rectangle((x0, y0), abs(x1 - x0), abs(y1 - y0), edgecolor=color, fill=False, linewidth=1)
+        #     rects.append([(x0, y0), abs(x1 - x0), abs(y1 - y0), color, False, 1])
+        #     ax2.add_patch(rect)
+        for i in range(len(boxes_pre)):
+            if scores_pre[i]>0.5:
+                x0, y0, x1, y1 = boxes_pre[i]
+                color = COLOR_MAP[labels_pre[i]]
+                rect = plt.Rectangle((x0, y0), abs(x1 - x0), abs(y1 - y0), edgecolor=color, fill=False, linewidth=1)
+                rects.append([(x0, y0), abs(x1 - x0), abs(y1 - y0), color, False, 1])
+                ax2.add_patch(rect)
         plt.imshow(image)
         #显示预测的mask
         ax3=fig.add_subplot(2,2,4)
@@ -577,11 +600,11 @@ def evalutation(model_name,datapath):
             rect=plt.Rectangle(rect[0],rect[1],rect[2],edgecolor=rect[3],fill=rect[4],linewidth=rect[5])
             ax3.add_patch(rect)
         plt.imshow(pre)
-        #plt.show()
+        plt.show()
 
 if __name__=='__main__':
     #评估单个切片
-    evalutation("axial.pt","/Users/jinxiaoqiang/jinxiaoqiang/ModelsGenesis/pytorch/axial_test_slice")
+    evalutation("axial.pt","/media/victoria/9c3e912e-22e1-476a-ad55-181dbde9d785/jinxiaoqiang/axial_slice")
     # evalutation("sagit.pt","/Users/jinxiaoqiang/jinxiaoqiang/ModelsGenesis/pytorch/sagital_test_slice")
     # evalutation("cornal.pt","/Users/jinxiaoqiang/jinxiaoqiang/ModelsGenesis/pytorch/coronal_test_slice")
 
