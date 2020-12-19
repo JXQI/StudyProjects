@@ -12,6 +12,7 @@ import numpy as np
 import os
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 from random import random
+import time
 from settings import IMAGE,MODEL_NAME,AXIAL_MODEL,CORNAL_MODEL,ATTENTION,LOG,DEBUG_LOG,\
     SAGIT_MODEL,AXIAL_TEST,CORNAL_TEST,SAGIT_TEST,NUM_CLASS,HU_LEVEL,HU_WINDOW,NII_GZ,NII_GZ_SAVE
 import SimpleITK as sitk
@@ -84,13 +85,13 @@ def draw_save(boxes_pre,image_gray,mask,N):
     global mask_OUTPUT
     global EXIST
 
-    if boxes_pre:
-        EXIST = True
-        for i in boxes_pre:
-            # 在原图上画矩形框并且保存
-            if LOG:print("====>在原图上标记检测框:{}".format(i))
-            draw = ImageDraw.Draw(image_gray)
-            draw.rectangle(i,fill=None,outline="black")
+    # if boxes_pre:
+    #     EXIST = True
+    #     for i in boxes_pre:
+    #         # 在原图上画矩形框并且保存
+    #         if LOG:print("====>在原图上标记检测框:{}".format(i))
+    #         draw = ImageDraw.Draw(image_gray)
+    #         draw.rectangle(i,fill=None,outline="black")
     OUTPUT.append(np.array(image_gray))
     mask_OUTPUT.append(np.array(mask))
     if LOG:print("\n====>已经检测的切片数目：{}/{}<====\n".format(len(OUTPUT),N))
@@ -156,7 +157,9 @@ def prediction(nii_image):
 
             # 空间信息融合，如果存在相邻切片直接的判断，则进行判断，否则直接保存检测到的单个切片
             if ATTENTION:
-                attention(image_gray,boxes_pre,N)
+                boxes_masks_pre=[boxes_pre,masks_pre]
+                attention(image_gray,boxes_masks_pre,N,order+1)
+                # print("-----{}/{}".format(len(G.output),order+1))
                 nii_output, nii_mask_output = np.array(G.output), np.array(G.mask_output)  # global_attention中的全局变量
             else:
                 draw_save(boxes_pre,image_gray,mask,N)
@@ -710,10 +713,12 @@ if __name__=='__main__':
         os.makedirs(join(nii_savepath,'image'))
         os.makedirs(join(nii_savepath,'mask'))
     for i in os.listdir(nii_path):
+        begin=time.time()
         print("\n\n{}\n\n".format(i))
         nii=join(nii_path,i)
         # nii="/media/victoria/9c3e912e-22e1-476a-ad55-181dbde9d785/jinxiaoqiang/rifrac/ribfrac-val-images/RibFrac421-image.nii.gz"
         signal_nii(nii, nii_savepath)
-        print("\n\n\n\n处理完一个\n\n\n")
+        end=time.time()
+        print("\n\n\n\n{}:处理结束。耗时：{}\n\n\n".format(i,end-begin))
         # break
     plt.show()

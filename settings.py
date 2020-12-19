@@ -24,6 +24,8 @@ SAGIT_TEST="/media/victoria/9c3e912e-22e1-476a-ad55-181dbde9d785/jinxiaoqiang/ax
 NII_GZ="/media/victoria/9c3e912e-22e1-476a-ad55-181dbde9d785/jinxiaoqiang/rifrac/ribfrac-val-images/"
 #生成的结果保存路径
 NII_GZ_SAVE="./nii_test"
+#生成用于测试的结果保存路径
+NII_GA_PRE='./nii_pre'
 
 #窗口
 HU_WINDOW=1100
@@ -33,9 +35,9 @@ HU_LEVEL=750
 MODEL_NAME='axial.pt'
 
 #是否开启连续层直接的判断
-ATTENTION=False
+ATTENTION=True
 
 #判断日志打印(print)是否开启
-LOG=True
+LOG=False
 ATTENTION_LOG=False
-DEBUG_LOG=True
+DEBUG_LOG=False
