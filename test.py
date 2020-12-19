@@ -79,31 +79,21 @@ def window_transform(ct_array, windowWidth, windowCenter, normal=False):
 """
 function:画框并且保存数据
 """
-def draw_save(boxes_pre,image_gray,N):
+def draw_save(boxes_pre,image_gray,mask,N):
     global OUTPUT
     global mask_OUTPUT
     global EXIST
 
-    mask_gray = Image.new('L', size=image_gray.size, color=0)
     if boxes_pre:
         EXIST = True
         for i in boxes_pre:
-            x0, y0, x1, y1 = i
             # 在原图上画矩形框并且保存
             if LOG:print("====>在原图上标记检测框:{}".format(i))
             draw = ImageDraw.Draw(image_gray)
             draw.rectangle(i,fill=None,outline="black")
-            #在mask上画矩形框并且保存
-            if LOG:print("====>在mask上标记检测框:{}".format(i))
-            #为mask着色
-            mask_gray=np.array(mask_gray)
-            mask_gray[int(x0):int(x1), int(y0):int(y1)] = boxes_pre.index(i) + 1
     OUTPUT.append(np.array(image_gray))
-    mask_OUTPUT.append(np.array(mask_gray))
+    mask_OUTPUT.append(np.array(mask))
     if LOG:print("\n====>已经检测的切片数目：{}/{}<====\n".format(len(OUTPUT),N))
-    # output=np.array(OUTPUT)
-    # mask_output=np.array(mask_OUTPUT)
-    # if LOG:print("输出图像的形状：{},mask的形状：{}".format(output.shape,mask_output.shape))
 """
 function: 对多个nii切片做判断，并且加mask和boxes
 args: 输入一个完整的切片图像arry，输出同样形状，并且加了mask和boxes的图像arry
@@ -125,23 +115,51 @@ def prediction(nii_image):
             predict = model([img.to(device)])
             image = Image.fromarray(img.mul(255).permute(1, 2, 0).byte().numpy())
             #转化成灰度图最后保存
-            image_gray = image.convert('L')
+            image_gray = image.convert('L') # TODO: 为什么转换为L而不是RGB
             #保存预测的mask
-            mask_gray = Image.new('L',image_gray.size,color=0)
-            boxes_pre = predict[0]['boxes']     #TODO:考虑后边加不加mask，等到效果验证好了再决定
-            # 合并重叠的区域
-            boxes_pre = inter_rec(boxes_pre)
-            # 计算boxes中心
-            boxes_center = [box_center(i) for i in boxes_pre]
-            if LOG:print("axial截面检测到的boxes中心{}".format(boxes_center))
-            boxes_pre = [list(i) for i in boxes_pre if judge_cor_sig(i, index)]
-            if LOG:print("正交判断的结果：{}".format(boxes_pre))
+            mask=np.zeros(list(image_gray.size))
+            # 预测的结果，根据scores进行筛选，socres大于0.5的保留
+            masks_pre = predict[0]['masks']
+            boxes_pre = predict[0]['boxes']
+            socres_pre = predict[0]['scores']
+            labels_pre = predict[0]['labels']
 
-            if ATTENTION:  #如果存在相邻切片直接的判断，则进行判断，否则直接保存检测到的单个切片
+            boxes_pre=np.array(boxes_pre.cpu())
+            print("all boxes--{}".format(len(boxes_pre)))
+            # 判断预测结果是否不为空：
+            if np.any(boxes_pre):
+                # 保存筛选后的预测值，并且对mask进行了二值化
+                process_predict={"boxes":[],'masks':[],'scores':[],'labels':[]}
+                for i in range(len(socres_pre)):
+                    if socres_pre[i]>0.5:
+                        masks_pre[masks_pre>=0.5]=int(labels_pre[i])     #直接将mask的数值复制为类别信息
+                        masks_pre[masks_pre<0.5]=0
+                        process_predict['boxes'].append(boxes_pre[i])
+                        process_predict['masks'].append(masks_pre[i])
+                        process_predict['scores'].append(socres_pre[i])
+                        process_predict['labels'].append(labels_pre[i])
+                # 将根据socres处理过的boxes和mask根据socres除去重叠的mask和boxes
+                print("before--{}".format(len(process_predict["boxes"])))
+                if len(process_predict["boxes"]):
+                    process_predict=De_overlap(process_predict)
+                print("after--{}".format(len(process_predict["boxes"])))
+                # 根据label的值给mask赋值，mask的值代表类别信息
+                boxes_pre=process_predict["boxes"]
+                masks_pre=process_predict['masks']
+                for i in range(len(masks_pre)):
+                    mask+=np.array(masks_pre[i][0].cpu())
+                # 进行三个视图正交判断的部分
+                # boxes_center = [box_center(i) for i in boxes_pre] # 计算boxes中心
+                # if LOG:print("axial截面检测到的boxes中心{}".format(boxes_center))
+                # boxes_pre = [list(i) for i in boxes_pre if judge_cor_sig(i, index)]
+                # if LOG:print("正交判断的结果：{}".format(boxes_pre))
+
+            # 空间信息融合，如果存在相邻切片直接的判断，则进行判断，否则直接保存检测到的单个切片
+            if ATTENTION:
                 attention(image_gray,boxes_pre,N)
                 nii_output, nii_mask_output = np.array(G.output), np.array(G.mask_output)  # global_attention中的全局变量
             else:
-                draw_save(boxes_pre,image_gray,N)
+                draw_save(boxes_pre,image_gray,mask,N)
                 nii_output, nii_mask_output = np.array(OUTPUT), np.array(mask_OUTPUT)  # 本文件中的全局变量
     #清空判断下一个nii数据
     G.output, G.mask_output = [], []
@@ -285,6 +303,69 @@ def inter_rec(boxes_pre):
     except:
         print("判断矩形相交部分出错！！！")
     return boxes_pre_new
+
+"""
+function: 判断两个矩形是否相交，如果相交根据socres，只i保留得分大的部分
+args : 输入预测的结果
+return : 返回预测的结果，同样是字典类型
+"""
+def De_overlap(predict):
+    #将boxes根据x1的大小进行排序
+    boxes_pre=np.array(predict["boxes"])
+    indice = boxes_pre[:, 0]
+    # 将box转换为list，方便判断index
+    boxes_pre=[list(i) for i in list(boxes_pre)]    #转换为list，方便求index
+    process_predict = {"boxes": [], 'masks': [], 'scores': [], 'labels': []}
+    #去除重复的box
+    for _, box in sorted(zip(indice, boxes_pre),key=lambda x:(x[0],x[1][1])):
+        index=boxes_pre.index(box)
+        process_predict["boxes"].append(np.array(box))
+        process_predict["masks"].append(predict["masks"][index])
+        process_predict["scores"].append(predict["scores"][index])
+        process_predict["labels"].append(predict["labels"][index])
+    boxes_pre_new = np.array(process_predict["boxes"])
+    #x0,y0,x1,y1
+    i=0
+    boxes_pre_new=list(boxes_pre_new)
+    while(i<len(boxes_pre_new)-1):
+        x0,y0,x1,y1=boxes_pre_new[i]
+
+        j=i+1 #从当前位置的下一个元素开始判断
+        Reset_flag=False #判断是否删除i位置的元素
+        while(j<len(boxes_pre_new)):
+            m0, n0, m1, n1 = boxes_pre_new[j]
+            if not (m0>x1 or n0>y1 or n1<y0):
+                # 根据scoresi进行判断
+                if not process_predict["scores"][i]>process_predict["scores"][j]:
+                    # process_predict["scores"][i],process_predict["scores"][j]=process_predict["scores"][j],process_predict["scores"][i]
+                    # process_predict["labels"][i],process_predict["labels"][j]=process_predict["labels"][j],process_predict["labels"][i]
+                    # process_predict["masks"][i],process_predict["masks"][j]=process_predict["masks"][j],process_predict["masks"][i]
+                    # # process_predict["boxes"][i],process_predict["boxes"][j]=process_predict["boxes"][j],process_predict["boxes"][i]
+                    # boxes_pre_new[i],boxes_pre_new[j]=boxes_pre_new[j],boxes_pre_new[i]
+                    # boxes_pre_new.pop(j)  # 因为矩形框相交，交换顺序后删除分数小的，所以这里将i位置的替换，而将j位置的去掉，这样可以维持原来boxes的顺序
+                    boxes_pre_new.pop(i)
+                    process_predict["scores"].pop(i)
+                    process_predict["labels"].pop(i)
+                    process_predict["masks"].pop(i)
+                    # 删除当前位置元素之后，从头开始遍历，因为无法保证j位置的元素和i前边的元素没有交集
+                    Reset_flag=True
+                    break
+                else:
+                    #删除得分小的mask
+                    boxes_pre_new.pop(j)
+                    process_predict["scores"].pop(j)
+                    process_predict["labels"].pop(j)
+                    process_predict["masks"].pop(j)
+            else:
+                j+=1
+        # 如果将i位置的元素删除，则从头开始遍历,否则直接判断下一个元素
+        if Reset_flag:
+            i=0
+        else:
+            i=i+1
+    # 判断结束，将box赋给预测的结果
+    process_predict["boxes"]=boxes_pre_new
+    return process_predict
 
 """
 function: 初始化加载各种数据，各种模型
@@ -604,7 +685,7 @@ def evalutation(model_name,datapath):
 
 if __name__=='__main__':
     #评估单个切片
-    evalutation("axial.pt","/media/victoria/9c3e912e-22e1-476a-ad55-181dbde9d785/jinxiaoqiang/axial_slice")
+    # evalutation("axial.pt","/media/victoria/9c3e912e-22e1-476a-ad55-181dbde9d785/jinxiaoqiang/axial_slice")
     # evalutation("sagit.pt","/Users/jinxiaoqiang/jinxiaoqiang/ModelsGenesis/pytorch/sagital_test_slice")
     # evalutation("cornal.pt","/Users/jinxiaoqiang/jinxiaoqiang/ModelsGenesis/pytorch/coronal_test_slice")
 
@@ -622,17 +703,17 @@ if __name__=='__main__':
     #         print("第{}张没有检测到骨折部分".format(order+1))
 
     # 判断单个nii.gz文件，并且生成加mask的nii.gz文件
-    # Init()
-    # nii_path=NII_GZ
-    # nii_savepath=NII_GZ_SAVE
-    # if not os.path.isdir(nii_savepath):
-    #     os.makedirs(join(nii_savepath,'image'))
-    #     os.makedirs(join(nii_savepath,'mask'))
-    # for i in os.listdir(nii_path):
-    #     print("\n\n{}\n\n".format(i))
-    #     nii=join(nii_path,i)
-    #     #nii="/media/victoria/9c3e912e-22e1-476a-ad55-181dbde9d785/jinxiaoqiang/rifrac/ribfrac-val-images/RibFrac489-image.nii.gz"
-    #     signal_nii(nii, nii_savepath)
-    #     print("\n\n\n\n处理完一个\n\n\n")
-    #     #break
-    # plt.show()
+    Init()
+    nii_path=NII_GZ
+    nii_savepath=NII_GZ_SAVE
+    if not os.path.isdir(nii_savepath):
+        os.makedirs(join(nii_savepath,'image'))
+        os.makedirs(join(nii_savepath,'mask'))
+    for i in os.listdir(nii_path):
+        print("\n\n{}\n\n".format(i))
+        nii=join(nii_path,i)
+        # nii="/media/victoria/9c3e912e-22e1-476a-ad55-181dbde9d785/jinxiaoqiang/rifrac/ribfrac-val-images/RibFrac421-image.nii.gz"
+        signal_nii(nii, nii_savepath)
+        print("\n\n\n\n处理完一个\n\n\n")
+        # break
+    plt.show()

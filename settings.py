@@ -6,7 +6,7 @@
 GPU=False
 EPOCH=200
 BATCH_SIZE=8
-NUM_CLASS=1+4
+NUM_CLASS=1+5
 
 #数据集路径
 IMAGE="/media/victoria/9c3e912e-22e1-476a-ad55-181dbde9d785/jinxiaoqiang/axial_slice"
@@ -16,9 +16,9 @@ AXIAL_MODEL="./Weights/axial.pt"
 CORNAL_MODEL="./Weights/cornal.pt"
 SAGIT_MODEL="./Weights/sagit.pt"
 #训练数据集的路径
-AXIAL_TEST="/Users/jinxiaoqiang/jinxiaoqiang/ModelsGenesis/pytorch/axial_test_slice"
-CORNAL_TEST="/Users/jinxiaoqiang/jinxiaoqiang/ModelsGenesis/pytorch/coronal_test_slice"
-SAGIT_TEST="/Users/jinxiaoqiang/jinxiaoqiang/ModelsGenesis/pytorch/sagital_test_slice"
+AXIAL_TEST="/media/victoria/9c3e912e-22e1-476a-ad55-181dbde9d785/jinxiaoqiang/axial_slice"
+CORNAL_TEST="/media/victoria/9c3e912e-22e1-476a-ad55-181dbde9d785/jinxiaoqiang/axial_slice"
+SAGIT_TEST="/media/victoria/9c3e912e-22e1-476a-ad55-181dbde9d785/jinxiaoqiang/axial_slice"
 
 #测试集路径
 NII_GZ="/media/victoria/9c3e912e-22e1-476a-ad55-181dbde9d785/jinxiaoqiang/rifrac/ribfrac-val-images/"
@@ -33,9 +33,9 @@ HU_LEVEL=750
 MODEL_NAME='axial.pt'
 
 #是否开启连续层直接的判断
-ATTENTION=True
+ATTENTION=False
 
 #判断日志打印(print)是否开启
-LOG=False
+LOG=True
 ATTENTION_LOG=False
 DEBUG_LOG=True
