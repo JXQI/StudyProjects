@@ -125,7 +125,7 @@ def prediction(nii_image):
             labels_pre = predict[0]['labels']
 
             boxes_pre=np.array(boxes_pre.cpu())
-            print("all boxes--{}".format(len(boxes_pre)))
+            # print("all boxes--{}".format(len(boxes_pre)))
             # 判断预测结果是否不为空：
             if np.any(boxes_pre):
                 # 保存筛选后的预测值，并且对mask进行了二值化
@@ -139,10 +139,10 @@ def prediction(nii_image):
                         process_predict['scores'].append(socres_pre[i])
                         process_predict['labels'].append(labels_pre[i])
                 # 将根据socres处理过的boxes和mask根据socres除去重叠的mask和boxes
-                print("before--{}".format(len(process_predict["boxes"])))
+                # print("before--{}".format(len(process_predict["boxes"])))
                 if len(process_predict["boxes"]):
                     process_predict=De_overlap(process_predict)
-                print("after--{}".format(len(process_predict["boxes"])))
+                # print("after--{}".format(len(process_predict["boxes"])))
                 # 根据label的值给mask赋值，mask的值代表类别信息
                 boxes_pre=process_predict["boxes"]
                 masks_pre=process_predict['masks']
