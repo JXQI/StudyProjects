@@ -25,12 +25,11 @@ def main():
     dataset = PennFudanDataset_train(IMAGE, get_transform(train=True))
     dataset_test = PennFudanDataset_train(IMAGE, get_transform(train=False))
 
-    print(len(dataset),len(dataset_test))
     # split the dataset in train and test set
     indices = torch.randperm(len(dataset)).tolist()
-    dataset = torch.utils.data.Subset(dataset, indices[:-500])
-    dataset_test = torch.utils.data.Subset(dataset_test, indices[-500:])
-
+    dataset = torch.utils.data.Subset(dataset, indices[:-1000])
+    dataset_test = torch.utils.data.Subset(dataset_test, indices[-1000:])
+    print(len(dataset), len(dataset_test))
     # define training and validation data loaders
     data_loader = torch.utils.data.DataLoader(
         dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=4,
