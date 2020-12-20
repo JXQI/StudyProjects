@@ -6,6 +6,7 @@ import transforms as T
 from loader import PennFudanDataset,PennFudanDataset_train
 from model import get_model_instance_segmentation
 import os
+from skimage.measure import label, regionprops
 from PIL import Image
 from matplotlib import pyplot as plt
 import numpy as np
@@ -239,6 +240,11 @@ def signal_nii(nii,nii_savepath):
     #返回原图上带有boxes和mask的切片
     pre_data,pre_mask=prediction(nii_image)
     print(pre_data.shape,pre_mask.shape)
+    # 判断检测到的个数
+    pred_label = label(pre_mask > 0).astype(np.int16)
+    pred_regions = regionprops(pred_label, pre_mask)
+    pred_index = [0] + [region.label for region in pred_regions]
+    print("检测到的骨折数目为：{}".format(len(pred_index)))
     pre_nii_file=sitk.GetImageFromArray(pre_data)
     pre_nii_mask=sitk.GetImageFromArray(pre_mask)
     #必须设置方向，不然和原图像在ITK中打开对不齐
@@ -716,9 +722,9 @@ if __name__=='__main__':
         begin=time.time()
         print("\n\n{}\n\n".format(i))
         nii=join(nii_path,i)
-        # nii="/media/victoria/9c3e912e-22e1-476a-ad55-181dbde9d785/jinxiaoqiang/rifrac/ribfrac-val-images/RibFrac421-image.nii.gz"
+        nii="/media/victoria/9c3e912e-22e1-476a-ad55-181dbde9d785/jinxiaoqiang/rifrac/ribfrac-val-images/RibFrac421-image.nii.gz"
         signal_nii(nii, nii_savepath)
         end=time.time()
         print("\n\n\n\n{}:处理结束。耗时：{}\n\n\n".format(i,end-begin))
-        # break
+        break
     plt.show()
