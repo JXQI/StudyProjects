@@ -20,6 +20,10 @@ def _make_submission_files(pred, image_id, affine):
     # placeholder for label class since classifaction isn't included
     # pred_label_code = [0] + [1] * int(pred_label.max())
     pred_label_code = [0]+[pred[tuple(np.array(i.centroid,dtype="int64").tolist())] for i in pred_regions]
+    pred_label_code = np.array(pred_label_code)
+    pred_label_code[pred_label_code==5]=-1  #保证测试程序的正确
+    pred_label_code=list(pred_label_code)
+    # print(pred_label_code)
     pred_image = nib.Nifti1Image(pred_label, affine)
     pred_info = pd.DataFrame({
         "public_id": [image_id] * len(pred_index),
@@ -31,7 +35,7 @@ def _make_submission_files(pred, image_id, affine):
     return pred_image, pred_info
 
 if __name__=='__main__':
-    path=NII_GZ_SAVE #生成的mask对象路径
+    path=os.path.join(NII_GZ_SAVE,"mask") #生成的mask对象路径
     pred_dir=NII_GA_PRE #将要保存的预测对象
     if not os.path.isdir(pred_dir):
         os.makedirs(pred_dir)
