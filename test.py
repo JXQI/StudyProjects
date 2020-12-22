@@ -148,8 +148,16 @@ def prediction(nii_image):
                 # 根据label的值给mask赋值，mask的值代表类别信息
                 boxes_pre=process_predict["boxes"]
                 masks_pre=process_predict['masks']
-                for i in range(len(masks_pre)):
-                    mask+=np.array(masks_pre[i][0].cpu())
+
+                # 添加正交判断的结果
+                boxes_pre_judge, masks_pre_judge = [], []
+                for i in range(len(boxes_pre)):
+                    if judge_cor_sig(boxes_pre[i], index+1):  # 传入检测的boxes的坐标
+                        boxes_pre_judge.append(boxes_pre[i])
+                        masks_pre_judge.append(masks_pre[i])
+                if LOG: print("正交判断的结果：{}".format(boxes_pre))
+                boxes_pre=boxes_pre_judge
+                masks_pre=masks_pre_judge
                 # 进行三个视图正交判断的部分
                 # boxes_center = [box_center(i) for i in boxes_pre] # 计算boxes中心
                 # if LOG:print("axial截面检测到的boxes中心{}".format(boxes_center))
@@ -722,9 +730,9 @@ if __name__=='__main__':
         begin=time.time()
         print("\n\n{}\n\n".format(i))
         nii=join(nii_path,i)
-        nii="/media/victoria/9c3e912e-22e1-476a-ad55-181dbde9d785/jinxiaoqiang/rifrac/ribfrac-val-images/RibFrac421-image.nii.gz"
+        # nii="/media/victoria/9c3e912e-22e1-476a-ad55-181dbde9d785/jinxiaoqiang/rifrac/ribfrac-val-images/RibFrac421-image.nii.gz"
         signal_nii(nii, nii_savepath)
         end=time.time()
         print("\n\n\n\n{}:处理结束。耗时：{}\n\n\n".format(i,end-begin))
-        break
+        # break
     plt.show()

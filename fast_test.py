@@ -112,11 +112,12 @@ def process(predict_output):
     global OUTPUT
     global mask_OUTPUT
     N = len(predict_output["img"])
+    index=predict_output["index"]
     if LOG: print("切片个数为：{}".format(N))
 
     for order in range(N):
-        img=predict_output["img"][order]
-        predict=predict_output['predict'][order]
+        img = predict_output["img"][order]
+        predict = predict_output['predict'][order]
         image = Image.fromarray(img.mul(255).permute(1, 2, 0).byte().cpu().numpy())
         # 转化成灰度图最后保存
         image_gray = image.convert('L')  # TODO: 为什么转换为L而不是RGB
@@ -155,11 +156,21 @@ def process(predict_output):
             # 进行三个视图正交判断的部分
             # boxes_center = [box_center(i) for i in boxes_pre] # 计算boxes中心
             # if LOG:print("axial截面检测到的boxes中心{}".format(boxes_center))
-            # boxes_pre = [list(i) for i in boxes_pre if judge_cor_sig(i, index)]
-            # if LOG:print("正交判断的结果：{}".format(boxes_pre))
+            # boxes_pre = [list(i) for i in boxes_pre if judge_cor_sig(i, order+1)]
+            # 添加正交判断的结果
+            boxes_pre_judge,masks_pre_judge=[],[]
+            for i in range(len(boxes_pre)):
+                if judge_cor_sig(boxes_pre[i],index[order]+1):  # 传入检测的boxes的坐标
+                    boxes_pre_judge.append(boxes_pre[i])
+                    masks_pre_judge.append(masks_pre[i])
+            if LOG:print("正交判断的结果：{}".format(boxes_pre))
+            boxes_pre = boxes_pre_judge
+            masks_pre = masks_pre_judge
             # 空间信息融合，如果存在相邻切片直接的判断，则进行判断，否则直接保存检测到的单个切片
         if ATTENTION:
-            attention(image_gray, boxes_pre, N)
+            boxes_masks_pre = [boxes_pre, masks_pre]
+            attention(image_gray, boxes_masks_pre, N, order + 1)
+            # print("-----{}/{}".format(len(G.output),order+1))
             nii_output, nii_mask_output = np.array(G.output), np.array(G.mask_output)  # global_attention中的全局变量
         else:
             draw_save(boxes_pre, image_gray, mask, N)
@@ -174,7 +185,7 @@ args: 输入一个完整的切片图像arry，输出同样形状，并且加了m
 """
 def prediction(nii_image):
     data_loader = torch.utils.data.DataLoader(
-        axial_dataset, batch_size=8, shuffle=False, num_workers=4)
+        axial_dataset, batch_size=2, shuffle=False, num_workers=0)
     model = axial_model
     model.eval()
     # 对单个图像进行判断，结果存储到列表中[]
@@ -182,7 +193,7 @@ def prediction(nii_image):
     gpu_start=time.time()
     with torch.no_grad():
         for i,data in enumerate(data_loader):
-            img, index=data
+            img ,index = data
             img = list(image.to(device) for image in img)
             index=list(index)
             predict = model(img) #TODO
@@ -236,7 +247,7 @@ def signal_nii(nii,nii_savepath):
     pre_nii_mask.SetSpacing(space)
     pre_nii_mask.SetOrigin(origin)
     # sitk.WriteImage(pre_nii_file, join(nii_savepath, "image" , nii.split("/")[-1]))
-    # sitk.WriteImage(pre_nii_mask, join(nii_savepath, "mask" , nii.split("/")[-1]))
+    sitk.WriteImage(pre_nii_mask, join(nii_savepath, "mask" , nii.split("/")[-1]))
 
 """
 function: 做数据增强
@@ -346,25 +357,66 @@ def Init(label=True):
     sagit_model = get_model_instance_segmentation(num_classes)
     sagit_model.load_state_dict(torch.load(SAGIT_MODEL, map_location=torch.device('cpu')))
     sagit_model.to(device)
+"""
+function : 用score对mask进行筛选，并且合并重叠的box
+args : 输入预测结果，输出判断后的box和mask
+"""
+def De_Minscore(predict):
+    #求mask的尺寸
+    size=list(predict[0]['masks'][0].size())
+    # 保存预测的mask
+    mask = np.zeros(size)
+    # 预测的结果，根据scores进行筛选，socres大于0.5的保留
+    masks_pre = predict[0]['masks']
+    boxes_pre = predict[0]['boxes']
+    socres_pre = predict[0]['scores']
+    labels_pre = predict[0]['labels']
+
+    boxes_pre = np.array(boxes_pre.cpu())
+    # print("all boxes--{}".format(len(boxes_pre)))
+    # 判断预测结果是否不为空：
+    if np.any(boxes_pre):
+        # 保存筛选后的预测值，并且对mask进行了二值化
+        process_predict = {"boxes": [], 'masks': [], 'scores': [], 'labels': []}
+        for i in range(len(socres_pre)):
+            if socres_pre[i] > 0.5:
+                masks_pre[masks_pre >= 0.5] = int(labels_pre[i])  # 直接将mask的数值复制为类别信息
+                masks_pre[masks_pre < 0.5] = 0
+                process_predict['boxes'].append(boxes_pre[i])
+                process_predict['masks'].append(masks_pre[i])
+                process_predict['scores'].append(socres_pre[i])
+                process_predict['labels'].append(labels_pre[i])
+        # 将根据socres处理过的boxes和mask根据socres除去重叠的mask和boxes
+        # print("before--{}".format(len(process_predict["boxes"])))
+        if len(process_predict["boxes"]):
+            process_predict = De_overlap(process_predict)
+        # print("after--{}".format(len(process_predict["boxes"])))
+        # 根据label的值给mask赋值，mask的值代表类别信息
+        boxes_pre = process_predict["boxes"]
+        masks_pre = process_predict['masks']
+        for i in range(len(masks_pre)):
+            mask += np.array(masks_pre[i][0].cpu())
+    return boxes_pre,masks_pre
 
 '''
 function: 检测切片是否有正交的boxes
 '''
 def Detect(model,data,indice):
     box_centers,boxes_pre=[],[]
-    try:
-        img, label,_ = data
-        model.eval()
-        with torch.no_grad():
-            prediction=model([img.to(device)])
-            boxes_pre = prediction[0]['boxes']
-            # 合并重叠的区域
-            boxes_pre = inter_rec(boxes_pre)
-            if LOG:print("====>非axial截面检测到的区域{}".format(boxes_pre))
-            # 求标注框的中心
-            box_centers = [box_center(i) for i in boxes_pre]
-    except:
-        if DEBUG_LOG:print("=======>sagit 或者 cornal 切片检测出错<==========")
+    # try:
+    img , _ = data
+    model.eval()
+    with torch.no_grad():
+        prediction=model([img.to(device)])
+        # boxes_pre = prediction[0]['boxes']
+        # # 合并重叠的区域
+        # boxes_pre = inter_rec(boxes_pre)
+        boxes_pre,mask_pre = De_Minscore(prediction)
+        if LOG:print("====>非axial截面检测到的区域{}".format(boxes_pre))
+        # 求标注框的中心
+        box_centers = [box_center(i) for i in boxes_pre]
+    # except:
+    #     if DEBUG_LOG:print("=======>sagit 或者 cornal 切片检测出错<==========")
 
     #判断是否正交，同时检测到,需要注意的是，显示的时候坐标x,y是反的
     #这里如果只判断中心过于严格，应该判断在一个区间内即可
@@ -484,9 +536,8 @@ if __name__=='__main__':
         begin_time=time.time()
         print("\n\n{}\n\n".format(i))
         nii=join(nii_path,i)
-        nii="/media/victoria/9c3e912e-22e1-476a-ad55-181dbde9d785/jinxiaoqiang/rifrac/ribfrac-val-images/RibFrac421-image.nii.gz"
+        # nii="/media/victoria/9c3e912e-22e1-476a-ad55-181dbde9d785/jinxiaoqiang/rifrac/ribfrac-val-images/RibFrac421-image.nii.gz"
         signal_nii(nii, nii_savepath)
         end_time=time.time()
         print("\n\n\n\n{}处理结束,耗时:{}s\n\n\n".format(i,end_time-begin_time))
-        break
         # break
