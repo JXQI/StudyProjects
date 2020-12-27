@@ -9,6 +9,7 @@ from matplotlib import pyplot as plt
 import random
 import math
 import shutil
+from setting import DATA_PATH,LABEL_PATH,CSV1,CSV2
 
 windows = 1400
 leval = 600
@@ -110,8 +111,8 @@ function : 上一个产生切片的方式过于粗暴：
 """
 def slices_3():
     global class_name
-    data_path = '/Users/jinxiaoqiang/jinxiaoqiang/数据集/Bone/ribfrac/ribfrac-train-images/Part1'
-    label_path = '/Users/jinxiaoqiang/jinxiaoqiang/数据集/Bone/ribfrac/Part1'
+    data_path = DATA_PATH
+    label_path = LABEL_PATH
 
     dataname_list = os.listdir(data_path)
     dataname_list = [i for i in dataname_list if i.endswith('.gz')]
@@ -124,8 +125,8 @@ def slices_3():
     label_list=[x for _,x in sorted(zip(sort_index,label_list))]
 
     #读取rifrac-train-info-1.csv文件，确定类别信息
-    df1=pd.read_csv("/Users/jinxiaoqiang/jinxiaoqiang/数据集/Bone/ribfrac/ribfrac-train-info-1.csv")
-    df2=pd.read_csv("/Users/jinxiaoqiang/jinxiaoqiang/数据集/Bone/ribfrac/ribfrac-train-info-2.csv")
+    df1=pd.read_csv(CSV1)
+    df2=pd.read_csv(CSV2)
     df=pd.concat([df1,df2],ignore_index=True)
     #训练数据的大小
     #number=len(dataname_list)

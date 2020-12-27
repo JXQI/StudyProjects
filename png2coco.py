@@ -12,6 +12,8 @@ import fnmatch
 from PIL import Image
 import numpy as np
 from pycococreatortools import pycococreatortools
+from setting import SAVE_PATH
+import shutil
 
 INFO = {
     "description": "rib fracture",
@@ -150,3 +152,5 @@ if __name__=='__main__':
     # test 创建软连接，将test指向val,保证程序通过
     os.symlink("val2017",test_dir)
     os.symlink("instances_val2017.json","data/coco/annotations/instances_test2017.json")
+    # 将生成的数据集移动到需要保存的位置
+    shutil.move("data",SAVE_PATH)
