@@ -43,7 +43,7 @@ function : 统计每个切片的数据分布情况
 """
 # 统计每个类的数目，病变区域的最值和众数
 static_metric = {"class": {"1": 0, "2": 0, "3": 0, '4': 0, '5': 0}, "area":[],"bbox_area":[]}
-class_name=["Displaced","Nodisplaced","Buckle","Segmental","Ignore"]
+class_name=["Displaced","Nondisplaced","Buckle","Segmental","Ignore"]
 def static(regions):
     global static_metric
     print(regions)
