@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 import pylab
 pylab.rcParams['figure.figsize'] = (8.0, 10.0)
 
-annFile='./train/annotation_coco.json'
+annFile='./data/coco/annotations/instances_train2017.json'
 coco=COCO(annFile)
 # display COCO categories and supercategories
 cats = coco.loadCats(coco.getCatIds())
@@ -30,7 +30,7 @@ imgIds = coco.getImgIds()
 imgId=np.random.randint(0,len(imgIds))
 imgId=32
 img = coco.loadImgs(imgIds[imgId])[0]
-dataDir = './train'
+dataDir = './data/coco/train2017'
 # dataType = 'val2017'
 # I = io.imread('%s/%s/%s'%(dataDir,dataType,img['file_name']))
 I = io.imread('%s/%s'%(dataDir,img['file_name']))

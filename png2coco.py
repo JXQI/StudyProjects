@@ -153,4 +153,4 @@ if __name__=='__main__':
     os.symlink("val2017",test_dir)
     os.symlink("instances_val2017.json","data/coco/annotations/instances_test2017.json")
     # 将生成的数据集移动到需要保存的位置
-    shutil.move("data",SAVE_PATH)
+    # shutil.move("data",SAVE_PATH)
