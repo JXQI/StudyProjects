@@ -109,20 +109,26 @@ function : 上一个产生切片的方式过于粗暴：
         
         虽然实现了功能，但是有更简单的方法，利用skimage的库来进行操作
 """
-def slices_3():
+def slices_3(dataname_list,dataset_type=True):
     global class_name
     data_path = DATA_PATH
     label_path = LABEL_PATH
+    label_list=[file.split("-")[0]+"-label.nii.gz" for file in dataname_list]
 
-    dataname_list = os.listdir(data_path)
-    dataname_list = [i for i in dataname_list if i.endswith('.gz')]
-    #对列表进行排序，方便后边label对应，同时方便后边查看分割效果
-    sort_index=[int(dataname_list[i].split('-')[0][7:]) for i in range(len(dataname_list))]
-    dataname_list=[x for _,x in sorted(zip(sort_index,dataname_list))]
+    # 数据保存路径
+    data_dir = './data'
+    train_dir = './data/coco/train2017'
+    val_dir = "./data/coco/val2017"
+    test_dir = "./data/coco/test2017"
+    mask_dir = './data/coco/mask'
+    annotations_dir = './data/coco/annotations'
 
-    label_list=[i for i in  os.listdir(label_path) if i.endswith('.gz')]
-    sort_index=[int(label_list[i].split('-')[0][7:]) for i in range(len(label_list))]
-    label_list=[x for _,x in sorted(zip(sort_index,label_list))]
+    if not os.path.isdir(data_dir):
+        os.makedirs(train_dir)
+        os.makedirs(val_dir)
+        # os.makedirs(test_dir)
+        os.makedirs(mask_dir)
+        os.makedirs(annotations_dir)
 
     #读取rifrac-train-info-1.csv文件，确定类别信息
     df1=pd.read_csv(CSV1)
@@ -171,13 +177,14 @@ def slices_3():
                         slice_axial = Image.fromarray(
                             window_transform3(slice_axial, windowWidth=windows, windowCenter=leval)).convert('RGB')
                         slice_axial_label = Image.fromarray(mask_image).convert('L')
-                        # 保存图像
-                        path = "./axial_slice"
-                        if not os.path.isdir(path):
-                            os.makedirs(join(path, 'image'))
-                            os.makedirs(join(path, 'mask'))
-                        slice_axial.save(join(path, "image", slice_name))
-                        slice_axial_label.save(join(path, 'mask', mask_name))
+
+                        # 判断保存的位置，如果为真则保存在train2017下边
+                        if dataset_type:
+                            slice_axial.save(join(train_dir,slice_name))
+                        else:
+                            slice_axial.save(join(val_dir,slice_name))
+                        slice_axial_label.save(join(mask_dir,mask_name))
+
 
 """
 function : 对数据集进行划分，分为训练集和验证集
@@ -231,10 +238,29 @@ def divide(path,ratio):
 
     print("划分数据集完成")
 
+"""
+fucntion : 对nii.gz文件直接进行划分
+args : 输入是数据集的路径
+"""
+def divide_nii(path,ratio):
+    filelist=[file for file in os.listdir(path) if file.endswith('.gz')]
+    random.shuffle(filelist)
+    N=len(filelist)
+    train=filelist[:math.ceil(N*ratio)]
+    val=filelist[math.ceil(N*ratio):]
+    print(len(train),len(val),N)
+    return train,val
 
 if __name__=='__main__':
-    # 生成切片数据，保存在axial_slice下边
-    slices_3()
+    train,val=divide_nii(DATA_PATH,5/6)
+
+    # 先清空各个数据集，重新写入
+    if os.path.isdir('./data'):
+        shutil.rmtree('./data')
+    # 生成切片数据，保存在train2017下边
+    slices_3(train,dataset_type=True)
+    # 生成val数据集，保存在val2017下边
+    slices_3(val,dataset_type=False)
 
     # 显示统计数据分布
     # info=analysis()
@@ -242,6 +268,6 @@ if __name__=='__main__':
     # print(info)
 
     # 划分训练集和验证集，会创建新的目录data,删除原来的文件夹
-    path="./axial_slice"
-    divide(path,5/6)
+    # path="./axial_slice"
+    # divide(path,5/6)
 
