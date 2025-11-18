@@ -1,0 +1,102 @@
+import os
+import nibabel as nib
+import numpy as np
+import pandas as pd
+import torch
+import torch.nn as nn
+from scipy.ndimage import binary_closing, binary_opening, median_filter
+from skimage.measure import label, regionprops
+from skimage.morphology import disk, remove_small_objects
+from tqdm import tqdm
+
+
+'''
+function: 生成csv文件
+'''
+def _make_submission_files(pred, image_id, affine):
+    pred_label = label(pred > 0).astype(np.int16)
+    pred_regions = regionprops(pred_label, pred)
+    pred_index = [0] + [region.label for region in pred_regions]
+    pred_proba = [0.0] + [region.mean_intensity for region in pred_regions]
+    # placeholder for label class since classifaction isn't included
+    pred_label_code = [0] + [1] * int(pred_label.max())
+    pred_image = nib.Nifti1Image(pred_label, affine)
+    pred_info = pd.DataFrame({
+        "public_id": [image_id] * len(pred_index),
+        "label_id": pred_index,
+        "confidence": pred_proba,
+        "label_code": pred_label_code
+    })
+
+    return pred_image, pred_info
+'''
+function:生成单个预测文件
+'''
+def _predict_single_image(model, dataloader, prob_thresh, bone_thresh,
+        size_thresh):
+    pred = np.zeros(dataloader.dataset.image.shape)
+    crop_size = dataloader.dataset.crop_size
+    with torch.no_grad():
+        for _, sample in enumerate(dataloader):
+            images, centers = sample
+            images = images.cuda()
+            output = model(images).sigmoid().cpu().numpy().squeeze(axis=1)
+
+            for i in range(len(centers)):
+                center_x, center_y, center_z = centers[i]
+                cur_pred_patch = pred[
+                    center_x - crop_size // 2:center_x + crop_size // 2,
+                    center_y - crop_size // 2:center_y + crop_size // 2,
+                    center_z - crop_size // 2:center_z + crop_size // 2
+                ]
+                pred[
+                    center_x - crop_size // 2:center_x + crop_size // 2,
+                    center_y - crop_size // 2:center_y + crop_size // 2,
+                    center_z - crop_size // 2:center_z + crop_size // 2
+                ] = np.amax((output[i], cur_pred_patch), axis=0)
+
+    return pred
+
+'''
+function:生成预测文件
+'''
+def predict(args):
+    batch_size = 16
+    num_workers = 4
+
+    model = UNet(1, 1, first_out_channels=16)
+    model.eval()
+    if args.model_path is not None:
+        model_weights = torch.load(args.model_path)
+        model.load_state_dict(model_weights)
+    model = nn.DataParallel(model).cuda()
+
+    transforms = [
+        tsfm.Window(-200, 1000),
+        tsfm.MinMaxNorm(-200, 1000)
+    ]
+
+    image_path_list = sorted([os.path.join(args.image_dir, file)
+        for file in os.listdir(args.image_dir) if "nii" in file])
+    image_id_list = [os.path.basename(path).split("-")[0]
+        for path in image_path_list]
+
+    progress = tqdm(total=len(image_id_list))
+    pred_info_list = []
+    for image_id, image_path in zip(image_id_list, image_path_list):
+        dataset = FracNetInferenceDataset(image_path, transforms=transforms)
+        dataloader = FracNetInferenceDataset.get_dataloader(dataset,
+            batch_size, num_workers)
+        pred_arr = _predict_single_image(model, dataloader, args.prob_thresh,
+            args.bone_thresh, args.size_thresh)
+        pred_image, pred_info = _make_submission_files(pred_arr, image_id,
+            dataset.image_affine)
+        pred_info_list.append(pred_info)
+        pred_path = os.path.join(args.pred_dir, f"{image_id}_pred.nii.gz")
+        nib.save(pred_image, pred_path)
+
+        progress.update()
+
+    pred_info = pd.concat(pred_info_list, ignore_index=True)
+    pred_info.to_csv(os.path.join(args.pred_dir, "pred_info.csv"),
+        index=False)
