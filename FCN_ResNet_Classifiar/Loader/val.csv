@@ -1,0 +1,11 @@
+image_name,target
+ISIC_0000085,benign
+ISIC_0000041,benign
+ISIC_0000082,benign
+ISIC_0000023,benign
+ISIC_0000063,benign
+ISIC_0000076,malignant
+ISIC_0000002,malignant
+ISIC_0000046,malignant
+ISIC_0000004,malignant
+ISIC_0000074,malignant
